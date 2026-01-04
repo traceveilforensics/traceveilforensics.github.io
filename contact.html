@@ -13,7 +13,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
         (function() {
-            emailjs.init("YOUR_PUBLIC_KEY"); // Replace with your EmailJS public key
+            emailjs.init("4iUdRTWOtX5Ix-OPK");
         })();
     </script>
 </head>
@@ -289,7 +289,7 @@
                 };
 
                 try {
-                    await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
+                    await emailjs.send('Trace_Veil_notifications', 'template_2ieyto7', templateParams);
                     showSuccessMessage();
                     this.reset();
                 } catch (error) {
