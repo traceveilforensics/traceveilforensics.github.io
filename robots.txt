@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://trace-veil-forensics.netlify.app/sitemap.xml
+Sitemap: https://www.traceveilforensics.com/sitemap.xml
 
 # Disallow admin pages (if any)
 Disallow: /netlify/
