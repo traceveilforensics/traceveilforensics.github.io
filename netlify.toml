@@ -1,0 +1,12 @@
+[build]
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+# Email notifications are handled by Netlify Forms
+# Configure in Netlify Dashboard: Site settings → Forms → Email notifications
+
+# For WhatsApp notifications, set these environment variables in Netlify:
+# WHATSAPP_NUMBER = "254731570131"
+# CALLMEBOT_API_KEY = "your-api-key-from-callmebot.com"
