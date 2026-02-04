@@ -1,12 +1,55 @@
 [build]
   functions = "netlify/functions"
+  publish = "."
 
 [build.environment]
   NODE_VERSION = "18"
 
-# Email notifications are handled by Netlify Forms
-# Configure in Netlify Dashboard: Site settings → Forms → Email notifications
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
 
-# For WhatsApp notifications, set these environment variables in Netlify:
-# WHATSAPP_NUMBER = "254731570131"
-# CALLMEBOT_API_KEY = "your-api-key-from-callmebot.com"
+[[redirects]]
+  from = "/admin/*"
+  to = "/admin-dashboard.html"
+  status = 200
+
+[[redirects]]
+  from = "/customer/*"
+  to = "/customer-dashboard.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/admin-*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/customer-*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+
+[functions]
+  directory = "netlify/functions"
+
+[dev]
+  command = "npx serve ."
+  port = 3000
+  targetPort = 80
+  autoLaunch = false

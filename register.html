@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | Trace Veil Forensics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .auth-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0A1628 0%, #1E3A5F 100%);
+            padding: 20px;
+        }
+        .auth-box {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .auth-header img {
+            max-width: 200px;
+            margin-bottom: 20px;
+        }
+        .auth-header h2 {
+            color: #0A1628;
+            margin-bottom: 10px;
+        }
+        .auth-header p {
+            color: #666;
+            font-size: 14px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #0A1628;
+            font-size: 14px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+        .auth-button {
+            width: 100%;
+            padding: 12px;
+            background: #0A1628;
+            color: #FFD700;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+        }
+        .auth-button:hover {
+            background: #1E3A5F;
+        }
+        .auth-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        .success-message {
+            background: #e8f5e9;
+            color: #388e3c;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #eee;
+        }
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            position: relative;
+            color: #999;
+            font-size: 13px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        .login-link a {
+            color: #0A1628;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .login-link a:hover {
+            color: #FFD700;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #FFD700;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.6s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics Logo">
+                <h2>Create Account</h2>
+                <p>Register to access customer dashboard and services</p>
+            </div>
+
+            <div class="success-message" id="successMessage"></div>
+            <div class="error-message" id="errorMessage"></div>
+
+            <form id="registerForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" name="firstName" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" name="lastName" required placeholder="Doe">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" required placeholder="john@company.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required placeholder="At least 6 characters" minlength="6">
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" placeholder="+254 700 000 000">
+                    </div>
+                    <div class="form-group">
+                        <label for="company">Company Name</label>
+                        <input type="text" id="company" name="company" placeholder="Your Company Ltd">
+                    </div>
+                </div>
+
+                <button type="submit" class="auth-button" id="registerButton">
+                    <i class="fas fa-user-plus"></i> Create Account
+                    <span class="loading-spinner" id="spinner" style="display: none;"></span>
+                </button>
+            </form>
+
+            <div class="divider"><span>OR</span></div>
+
+            <p class="login-link">
+                Already have an account? <a href="admin-login.html">Login here</a>
+            </p>
+            
+            <p class="login-link">
+                <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Website</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const registerForm = document.getElementById('registerForm');
+        const registerButton = document.getElementById('registerButton');
+        const spinner = document.getElementById('spinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            const data = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                password: password,
+                phone: document.getElementById('phone').value,
+                company: document.getElementById('company').value
+            };
+
+            registerButton.disabled = true;
+            spinner.style.display = 'inline-block';
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+
+            try {
+                const response = await fetch('/.netlify/functions/auth-register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', result.token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+
+                    successMessage.textContent = 'Account created successfully! Redirecting to dashboard...';
+                    successMessage.style.display = 'block';
+
+                    setTimeout(() => {
+                        window.location.href = 'customer-dashboard.html';
+                    }, 1500);
+                } else {
+                    errorMessage.textContent = result.error || 'Registration failed. Please try again.';
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.textContent = 'Network error. Please try again.';
+                errorMessage.style.display = 'block';
+            } finally {
+                registerButton.disabled = false;
+                spinner.style.display = 'none';
+            }
+        });
+
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (token) {
+                window.location.href = 'customer-dashboard.html';
+            }
+        }
+
+        checkAuth();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard | Trace Veil Forensics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0A1628;
+            --secondary: #1E3A5F;
+            --accent: #FFD700;
+            --sidebar-width: 260px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        .dashboard-layout {
+            display: flex;
+        }
+
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--primary);
+            color: white;
+            min-height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header img {
+            max-width: 150px;
+        }
+
+        .sidebar-header a {
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            display: block;
+            margin-top: 10px;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-title {
+            padding: 10px 20px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--accent);
+            border-left: 3px solid var(--accent);
+        }
+
+        .nav-item i {
+            width: 24px;
+            margin-right: 10px;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 30px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .welcome-text {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: #e6c200;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2a4a7f;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon.blue { background: rgba(30, 58, 95, 0.1); color: var(--secondary); }
+        .stat-icon.green { background: rgba(39, 174, 96, 0.1); color: #27ae60; }
+        .stat-icon.yellow { background: rgba(255, 215, 0, 0.1); color: #f39c12; }
+        .stat-icon.red { background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .table th {
+            font-weight: 600;
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-draft { background: #f0f0f0; color: #666; }
+        .status-sent { background: #e3f2fd; color: #1976d2; }
+        .status-paid { background: #e8f5e9; color: #388e3c; }
+        .status-overdue { background: #ffebee; color: #d32f2f; }
+        .status-pending { background: #fff3e0; color: #f57c00; }
+        .status-completed { background: #e8f5e9; color: #388e3c; }
+        .status-in_progress { background: #e3f2fd; color: #1976d2; }
+
+        .action-btn {
+            padding: 6px 10px;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #f0f0f0;
+            color: var(--primary);
+        }
+
+        .profile-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .profile-info h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .info-item {
+            display: flex;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .info-label {
+            width: 140px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .info-value {
+            flex: 1;
+            color: var(--primary);
+        }
+
+        .service-card {
+            border: 2px solid #eee;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .service-card:hover {
+            border-color: var(--accent);
+        }
+
+        .service-card h4 {
+            margin: 0 0 10px 0;
+            color: var(--primary);
+        }
+
+        .service-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .profile-section {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics">
+                <a href="index.html"><i class="fas fa-home"></i> Back to Website</a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Dashboard</div>
+                    <a href="#" class="nav-item active" data-page="overview">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Overview
+                    </a>
+                    <a href="#" class="nav-item" data-page="invoices">
+                        <i class="fas fa-file-invoice"></i>
+                        My Invoices
+                    </a>
+                    <a href="#" class="nav-item" data-page="requests">
+                        <i class="fas fa-clipboard-list"></i>
+                        Service Requests
+                    </a>
+                    <a href="#" class="nav-item" data-page="services">
+                        <i class="fas fa-cogs"></i>
+                        Available Services
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Account</div>
+                    <a href="#" class="nav-item" data-page="profile">
+                        <i class="fas fa-user"></i>
+                        My Profile
+                    </a>
+                    <a href="#" class="nav-item" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div>
+                    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+                    <p class="welcome-text" id="welcomeText">Welcome back!</p>
+                </div>
+                <button class="btn btn-primary" onclick="showRequestModal()">
+                    <i class="fas fa-plus"></i> Request Service
+                </button>
+            </div>
+
+            <div id="contentArea">
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Request Service</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/.netlify/functions';
+        let currentUser = null;
+
+        async function init() {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            if (!token || !user) {
+                window.location.href = 'admin-login.html';
+                return;
+            }
+
+            currentUser = user;
+            document.getElementById('welcomeText').textContent = `Welcome back, ${user.first_name}!`;
+
+            await loadOverview();
+            setupNavigation();
+        }
+
+        function setupNavigation() {
+            document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPage(item.dataset.page);
+                });
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+                document.getElementById('sidebar').classList.toggle('active');
+            });
+        }
+
+        async function showPage(page) {
+            document.getElementById('pageTitle').textContent = page.charAt(0).toUpperCase() + page.slice(1);
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+
+            const contentArea = document.getElementById('contentArea');
+
+            switch(page) {
+                case 'overview':
+                    await loadOverview();
+                    break;
+                case 'invoices':
+                    await loadInvoices();
+                    break;
+                case 'requests':
+                    await loadRequests();
+                    break;
+                case 'services':
+                    await loadAvailableServices();
+                    break;
+                case 'profile':
+                    await loadProfile();
+                    break;
+            }
+        }
+
+        async function loadOverview() {
+            document.getElementById('contentArea').innerHTML = getLoadingHTML();
+
+            try {
+                const [invoicesRes, requestsRes] = await Promise.all([
+                    fetch(`${API_BASE}/customer-invoices`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    }),
+                    fetch(`${API_BASE}/customer-requests`, {
+                        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                    })
+                ]);
+
+                const invoicesData = await invoicesRes.json();
+                const requestsData = await requestsRes.json();
+
+                const totalInvoices = invoicesData.invoices?.length || 0;
+                const paidInvoices = invoicesData.invoices?.filter(i => i.status === 'paid').length || 0;
+                const pendingInvoices = invoicesData.invoices?.filter(i => i.status === 'sent').length || 0;
+                const totalPending = invoicesData.invoices?.filter(i => i.status === 'sent').reduce((sum, i) => sum + parseFloat(i.total), 0) || 0;
+                const activeRequests = requestsData.requests?.filter(r => r.status === 'in_progress' || r.status === 'pending').length || 0;
+
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-file-invoice"></i>
+                            </div>
+                            <div class="stat-value">${totalInvoices}</div>
+                            <div class="stat-label">Total Invoices</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-value">${paidInvoices}</div>
+                            <div class="stat-label">Paid Invoices</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon yellow">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-value">${pendingInvoices}</div>
+                            <div class="stat-label">Pending Payment</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <i class="fas fa-clipboard-list"></i>
+                            </div>
+                            <div class="stat-value">${activeRequests}</div>
+                            <div class="stat-label">Active Requests</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Invoices</h3>
+                            <button class="btn btn-secondary" onclick="showPage('invoices')">View All</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Due Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${invoicesData.invoices?.slice(0, 5).map(inv => `
+                                        <tr>
+                                            <td><strong>${inv.invoice_number}</strong></td>
+                                            <td>KES ${parseFloat(inv.total).toLocaleString()}</td>
+                                            <td><span class="status-badge status-${inv.status}">${inv.status}</span></td>
+                                            <td>${new Date(inv.due_date).toLocaleDateString()}</td>
+                                            <td>
+                                                <button class="action-btn" onclick="viewInvoiceDetail('${inv.id}')"><i class="fas fa-eye"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="5" style="text-align: center;">No invoices found</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Service Requests</h3>
+                            <button class="btn btn-primary" onclick="showRequestModal()">New Request</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Service</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${requestsData.requests?.slice(0, 5).map(req => `
+                                        <tr>
+                                            <td><strong>${req.title}</strong></td>
+                                            <td>${req.service_plans?.services?.name || '-'}</td>
+                                            <td><span class="status-badge status-${req.status}">${req.status}</span></td>
+                                            <td><span class="status-badge status-${req.priority === 'high' ? 'overdue' : req.priority === 'urgent' ? 'overdue' : 'pending'}">${req.priority}</span></td>
+                                            <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="5" style="text-align: center;">No requests found</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading overview:', error);
+            }
+        }
+
+        async function loadInvoices() {
+            document.getElementById('contentArea').innerHTML = getLoadingHTML();
+
+            try {
+                const response = await fetch(`${API_BASE}/customer-invoices`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">My Invoices</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Invoice #</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Issue Date</th>
+                                        <th>Due Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.invoices?.map(inv => `
+                                        <tr>
+                                            <td><strong>${inv.invoice_number}</strong></td>
+                                            <td>KES ${parseFloat(inv.total).toLocaleString()}</td>
+                                            <td><span class="status-badge status-${inv.status}">${inv.status}</span></td>
+                                            <td>${new Date(inv.issue_date).toLocaleDateString()}</td>
+                                            <td>${new Date(inv.due_date).toLocaleDateString()}</td>
+                                            <td>
+                                                <button class="action-btn" onclick="viewInvoiceDetail('${inv.id}')"><i class="fas fa-eye"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="6" style="text-align: center;">No invoices found</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+            }
+        }
+
+        async function loadRequests() {
+            document.getElementById('contentArea').innerHTML = getLoadingHTML();
+
+            try {
+                const response = await fetch(`${API_BASE}/customer-requests`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">My Service Requests</h3>
+                            <button class="btn btn-primary" onclick="showRequestModal()">New Request</button>
+                        </div>
+                        <div class="card-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Service Plan</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Requested</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.requests?.map(req => `
+                                        <tr>
+                                            <td><strong>${req.title}</strong></td>
+                                            <td>${req.service_plans?.name || req.service_plans?.services?.name || 'Custom'}</td>
+                                            <td><span class="status-badge status-${req.status}">${req.status}</span></td>
+                                            <td><span class="status-badge status-${req.priority === 'high' ? 'overdue' : req.priority === 'urgent' ? 'overdue' : 'pending'}">${req.priority}</span></td>
+                                            <td>${new Date(req.created_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('') || '<tr><td colspan="5" style="text-align: center;">No requests found</td></tr>'}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading requests:', error);
+            }
+        }
+
+        async function loadAvailableServices() {
+            document.getElementById('contentArea').innerHTML = getLoadingHTML();
+
+            try {
+                const response = await fetch(`${API_BASE}/public-services`);
+                const data = await response.json();
+
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Available Services</h3>
+                        </div>
+                        <div class="card-body">
+                            ${data.services?.map(service => `
+                                <div class="service-card">
+                                    <h4><i class="fas ${service.icon}"></i> ${service.name}</h4>
+                                    <p>${service.description || 'Professional cybersecurity service'}</p>
+                                    <button class="btn btn-primary" onclick="requestService('${service.id}')">
+                                        Request This Service
+                                    </button>
+                                </div>
+                            `).join('') || '<p>No services available</p>'}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+
+        async function loadProfile() {
+            document.getElementById('contentArea').innerHTML = getLoadingHTML();
+
+            try {
+                const response = await fetch(`${API_BASE}/customer-profile`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const data = await response.json();
+
+                const customer = data.customer;
+                const user = customer.users;
+
+                document.getElementById('contentArea').innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">My Profile</h3>
+                            <button class="btn btn-primary" onclick="showEditProfileModal()">Edit Profile</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="profile-section">
+                                <div class="profile-info">
+                                    <h3>Personal Information</h3>
+                                    <div class="info-item">
+                                        <span class="info-label">First Name</span>
+                                        <span class="info-value">${user.first_name || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Last Name</span>
+                                        <span class="info-value">${user.last_name || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Email</span>
+                                        <span class="info-value">${user.email || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Phone</span>
+                                        <span class="info-value">${user.phone || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Company</span>
+                                        <span class="info-value">${customer.company_name || '-'}</span>
+                                    </div>
+                                </div>
+                                <div class="profile-info">
+                                    <h3>Billing Information</h3>
+                                    <div class="info-item">
+                                        <span class="info-label">Tax ID</span>
+                                        <span class="info-value">${customer.tax_id || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Address</span>
+                                        <span class="info-value">${customer.billing_address || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">City</span>
+                                        <span class="info-value">${customer.billing_city || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">State</span>
+                                        <span class="info-value">${customer.billing_state || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Postal Code</span>
+                                        <span class="info-value">${customer.billing_postal_code || '-'}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">Country</span>
+                                        <span class="info-value">${customer.billing_country || '-'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading profile:', error);
+            }
+        }
+
+        function showRequestModal() {
+            document.getElementById('modalTitle').textContent = 'Request Service';
+            document.getElementById('modalBody').innerHTML = `
+                <form id="requestForm">
+                    <div class="form-group">
+                        <label>Service Type</label>
+                        <select name="service_plan_id" id="serviceSelect" required>
+                            <option value="">Select a service</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" placeholder="Brief description of your request" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" placeholder="Provide details about your requirements"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select name="priority">
+                            <option value="normal">Normal</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Submit Request</button>
+                    </div>
+                </form>
+            `;
+
+            fetch(`${API_BASE}/public-services`)
+                .then(res => res.json())
+                .then(data => {
+                    const select = document.getElementById('serviceSelect');
+                    data.services?.forEach(service => {
+                        service.service_plans?.forEach(plan => {
+                            const option = document.createElement('option');
+                            option.value = plan.id;
+                            option.textContent = `${service.name} - ${plan.name} (KES ${parseFloat(plan.price).toLocaleString()})`;
+                            select.appendChild(option);
+                        });
+                    });
+                });
+
+            document.getElementById('requestForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const data = Object.fromEntries(formData);
+
+                try {
+                    const response = await fetch(`${API_BASE}/customer-requests`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        closeModal();
+                        showPage('requests');
+                    } else {
+                        alert('Failed to submit request');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+
+            openModal();
+        }
+
+        function showEditProfileModal() {
+            document.getElementById('modalTitle').textContent = 'Edit Profile';
+            document.getElementById('modalBody').innerHTML = '<p>Loading...</p>';
+
+            fetch(`${API_BASE}/customer-profile`, {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const customer = data.customer;
+                const user = customer.users;
+
+                document.getElementById('modalBody').innerHTML = `
+                    <form id="profileForm">
+                        <h4 style="margin-top: 0;">Personal Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>First Name</label>
+                                <input type="text" name="first_name" value="${user.first_name || ''}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Last Name</label>
+                                <input type="text" name="last_name" value="${user.last_name || ''}" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="text" name="phone" value="${user.phone || ''}">
+                        </div>
+                        <h4>Company Information</h4>
+                        <div class="form-group">
+                            <label>Company Name</label>
+                            <input type="text" name="company_name" value="${customer.company_name || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label>Tax ID</label>
+                            <input type="text" name="tax_id" value="${customer.tax_id || ''}">
+                        </div>
+                        <h4>Billing Address</h4>
+                        <div class="form-group">
+                            <label>Street Address</label>
+                            <textarea name="billing_address">${customer.billing_address || ''}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>City</label>
+                                <input type="text" name="billing_city" value="${customer.billing_city || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>State/Province</label>
+                                <input type="text" name="billing_state" value="${customer.billing_state || ''}">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Postal Code</label>
+                                <input type="text" name="billing_postal_code" value="${customer.billing_postal_code || ''}">
+                            </div>
+                            <div class="form-group">
+                                <label>Country</label>
+                                <input type="text" name="billing_country" value="${customer.billing_country || ''}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </div>
+                    </form>
+                `;
+
+                document.getElementById('profileForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target);
+                    const data = Object.fromEntries(formData);
+
+                    try {
+                        const response = await fetch(`${API_BASE}/customer-profile`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                            body: JSON.stringify(data)
+                        });
+
+                        if (response.ok) {
+                            closeModal();
+                            loadProfile();
+                        } else {
+                            alert('Failed to update profile');
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                    }
+                });
+            });
+
+            openModal();
+        }
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+
+        function getLoadingHTML() {
+            return '<div class="card"><div class="card-body" style="text-align: center; padding: 40px;"><i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #0A1628;"></i><p style="margin-top: 10px; color: #666;">Loading...</p></div></div>';
+        }
+
+        init();
+    </script>
+</body>
+</html>

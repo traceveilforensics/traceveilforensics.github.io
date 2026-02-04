@@ -1,0 +1,19 @@
+{
+  "name": "traceveil-forensics",
+  "version": "1.0.0",
+  "description": "Trace Veil Forensics - Cybersecurity Consulting Website",
+  "main": "index.js",
+  "scripts": {
+    "netlify-functions:serve": "netlify-lambda serve src/functions",
+    "netlify-functions:build": "netlify-lambda build src/functions"
+  },
+  "keywords": ["cybersecurity", "forensics", "netlify", "functions"],
+  "author": "Trace Veil Forensics",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.9.7"
+  }
+}
