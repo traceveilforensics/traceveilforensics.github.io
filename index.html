@@ -47,9 +47,34 @@
                     <li><a href="about.html" class="nav-link">About</a></li>
                     <li><a href="pricing.html" class="nav-link">Pricing</a></li>
                     <li><a href="contact.html" class="nav-link">Contact</a></li>
-                    <li><a href="admin-login.html" class="nav-link client-portal-link"><i class="fas fa-user-lock"></i> Client Portal</a></li>
                 </ul>
             </nav>
+            
+            <div class="header-actions">
+                <div class="auth-buttons" id="authButtons">
+                    <a href="register.html" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </a>
+                    <a href="login.html" class="btn btn-primary btn-sm">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                </div>
+                <div class="user-menu-dropdown" id="userMenu" style="display: none;">
+                    <button class="user-menu-btn" id="userMenuBtn">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userDisplayName">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="user-dropdown-menu" id="userDropdown">
+                        <li><a href="customer-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="customer-dashboard.html?tab=invoices"><i class="fas fa-file-invoice"></i> My Invoices</a></li>
+                        <li><a href="customer-dashboard.html?tab=requests"><i class="fas fa-clipboard-list"></i> Service Requests</a></li>
+                        <li><a href="customer-dashboard.html?tab=profile"><i class="fas fa-user"></i> Profile</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
             
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
@@ -369,6 +394,58 @@
                 }
             });
         });
+
+        // Authentication State Handler
+        function initAuth() {
+            const authButtons = document.getElementById('authButtons');
+            const userMenu = document.getElementById('userMenu');
+            const userDisplayName = document.getElementById('userDisplayName');
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            const logoutBtn = document.getElementById('logoutBtn');
+
+            if (!authButtons || !userMenu) return;
+
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+            if (token && user) {
+                authButtons.style.display = 'none';
+                userMenu.style.display = 'block';
+                userDisplayName.textContent = user.first_name || user.email;
+            } else {
+                authButtons.style.display = 'flex';
+                userMenu.style.display = 'none';
+            }
+
+            // User dropdown toggle
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('active');
+                });
+            }
+
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                if (userDropdown) {
+                    userDropdown.classList.remove('active');
+                }
+            });
+
+            // Logout handler
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('_testMode');
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+
+        initAuth();
     </script>
 </body>
 </html>

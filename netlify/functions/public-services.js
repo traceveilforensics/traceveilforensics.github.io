@@ -1,38 +1,15 @@
-const { supabase } = require('../utils/database');
-
+const localDB = require('./local-db');
+localDB.initDB();
 exports.handler = async (event) => {
+  if (event.httpMethod !== 'GET') {
+    return { statusCode: 405, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
   try {
-    if (event.httpMethod === 'GET') {
-      const { data: services, error } = await supabase
-        .from('services')
-        .select(`
-          *,
-          service_plans (*)
-        `)
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ services })
-      };
-    }
-
-    return {
-      statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-
+    const plans = localDB.readJSON('./data/plans.json');
+    const services = localDB.readJSON(localDB.SERVICES_FILE);
+    const servicesWithPlans = services.map(service => ({ ...service, service_plans: plans.filter(p => p.service_id === service.id) }));
+    return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ services: servicesWithPlans }) };
   } catch (error) {
-    console.error('Public services error:', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Internal server error' })
-    };
+    return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ error: 'Internal error' }) };
   }
 };

@@ -47,6 +47,35 @@
                 </ul>
             </nav>
             
+            <div class="header-actions">
+                <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <div class="auth-buttons" id="authButtons">
+                    <a href="register.html" class="btn btn-secondary btn-sm">
+                        <i class="fas fa-user-plus"></i> Sign Up
+                    </a>
+                    <a href="login.html" class="btn btn-primary btn-sm">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </a>
+                </div>
+                <div class="user-menu-dropdown" id="userMenu" style="display: none;">
+                    <button class="user-menu-btn" id="userMenuBtn">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userDisplayName">User</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="user-dropdown-menu" id="userDropdown">
+                        <li><a href="customer-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="customer-dashboard.html?tab=invoices"><i class="fas fa-file-invoice"></i> My Invoices</a></li>
+                        <li><a href="customer-dashboard.html?tab=requests"><i class="fas fa-clipboard-list"></i> Service Requests</a></li>
+                        <li><a href="customer-dashboard.html?tab=profile"><i class="fas fa-user"></i> Profile</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+            
             <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
                 <i class="fas fa-bars"></i>
             </button>
@@ -225,6 +254,7 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="shared.js"></script>
     <script>
         // Mobile Menu Toggle
         const mobileMenuBtn = document.getElementById('mobileMenuBtn');

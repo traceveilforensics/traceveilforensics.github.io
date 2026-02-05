@@ -1,0 +1,38 @@
+[
+  {
+    "id": "00000000-0000-0000-0000-000000000001",
+    "email": "admin@traceveilforensics.com",
+    "password_hash": "$2a$10$88Y2dIZauFLQtM4UlK3AxuiqnHaM6xF0Wh.b0X5MsPvYeRI8JHJjy",
+    "first_name": "Admin",
+    "last_name": "User",
+    "phone": "",
+    "company": "",
+    "role": "admin",
+    "is_active": true,
+    "created_at": "2026-02-04T15:50:07.491Z"
+  },
+  {
+    "id": "5bc84f50-3a3f-4911-b4a2-e09db307fb27",
+    "email": "test@example.com",
+    "password_hash": "$2a$10$BOoB4E3Y5gbN7NN9lh7bf.xg.29kYe8ghCRzIobY9c6Lyj.IE/Cuy",
+    "first_name": "Test",
+    "last_name": "User",
+    "phone": "123456789",
+    "company": "Test Corp",
+    "role": "customer",
+    "is_active": true,
+    "created_at": "2026-02-04T15:54:51.267Z"
+  },
+  {
+    "id": "1082e9f7-a35a-4547-93e5-f4f61ab9474a",
+    "email": "ariesgemini1st@gmail.com",
+    "password_hash": "$2a$10$djzO/hhvJFh3AyPxfz6z0urefMoDkaEsQSVKEhqHcy0etDmlqlMcG",
+    "first_name": "Aries",
+    "last_name": "Gemini",
+    "phone": "0987654322",
+    "company": "copa",
+    "role": "customer",
+    "is_active": true,
+    "created_at": "2026-02-04T16:03:17.762Z"
+  }
+]

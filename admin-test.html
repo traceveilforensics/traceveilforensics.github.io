@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin API Test</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .result { background: white; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        .success { border-left: 4px solid green; }
+        .error { border-left: 4px solid red; }
+        pre { background: #f0f0f0; padding: 10px; overflow: auto; }
+        button { padding: 10px 20px; background: #0A1628; color: #FFD700; border: none; cursor: pointer; margin: 5px; }
+        h2 { color: #0A1628; }
+    </style>
+</head>
+<body>
+    <h1>Admin Dashboard API Test</h1>
+    
+    <button onclick="runTests()">Run All Tests</button>
+    <button onclick="clearResults()">Clear</button>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function log(name, status, data) {
+            const div = document.createElement('div');
+            div.className = 'result ' + (status === 200 ? 'success' : 'error');
+            div.innerHTML = `<h3>${name}</h3>
+                <p><strong>Status:</strong> ${status}</p>
+                <pre>${JSON.stringify(data, null, 2)}</pre>`;
+            results.prepend(div);
+        }
+        
+        async function runTests() {
+            results.innerHTML = '';
+            
+            // First, login
+            log('1. Login', '...', 'Attempting login...');
+            const loginRes = await fetch('/api/auth-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: 'admin@traceveilforensics.com', password: 'Admin@123' })
+            });
+            const loginData = await loginRes.json();
+            
+            if (loginRes.ok) {
+                log('1. Login', loginRes.status, loginData);
+                localStorage.setItem('token', loginData.token);
+                localStorage.setItem('user', JSON.stringify(loginData.user));
+                
+                const token = loginData.token;
+                
+                // Test services
+                const svcRes = await fetch('/api/admin-services', { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                const svcData = await svcRes.json();
+                log('2. Admin Services', svcRes.status, svcData);
+                
+                // Test plans
+                const plansRes = await fetch('/api/admin-plans', { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                const plansData = await plansRes.json();
+                log('3. Admin Plans', plansRes.status, plansData);
+                
+                // Test customers
+                const custRes = await fetch('/api/admin-customers', { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                const custData = await custRes.json();
+                log('4. Admin Customers', custRes.status, custData);
+                
+                // Test invoices
+                const invRes = await fetch('/api/admin-invoices', { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                const invData = await invRes.json();
+                log('5. Admin Invoices', invRes.status, invData);
+                
+                // Test reports
+                const repRes = await fetch('/api/admin-reports', { 
+                    headers: { 'Authorization': 'Bearer ' + token } 
+                });
+                const repData = await repRes.json();
+                log('6. Admin Reports', repRes.status, repData);
+                
+            } else {
+                log('1. Login FAILED', loginRes.status, loginData);
+            }
+        }
+        
+        function clearResults() {
+            results.innerHTML = '';
+        }
+    </script>
+</body>
+</html>

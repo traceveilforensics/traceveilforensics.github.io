@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | Trace Veil Forensics</title>
+    <title>Sign In | Trace Veil Forensics</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -22,7 +21,7 @@
             background: white;
             border-radius: 12px;
             padding: 40px;
-            max-width: 450px;
+            max-width: 400px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
@@ -42,17 +41,12 @@
             color: #666;
             font-size: 14px;
         }
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             font-weight: 500;
             color: #0A1628;
             font-size: 14px;
@@ -63,8 +57,8 @@
             border: 2px solid #e0e0e0;
             border-radius: 6px;
             font-size: 14px;
-            transition: border-color 0.3s;
             box-sizing: border-box;
+            transition: border-color 0.3s;
         }
         .form-group input:focus {
             outline: none;
@@ -81,7 +75,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
-            margin-top: 10px;
         }
         .auth-button:hover {
             background: #1E3A5F;
@@ -93,15 +86,6 @@
         .error-message {
             background: #fee;
             color: #c33;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            display: none;
-        }
-        .success-message {
-            background: #e8f5e9;
-            color: #388e3c;
             padding: 10px;
             border-radius: 6px;
             margin-bottom: 20px;
@@ -129,19 +113,30 @@
             color: #999;
             font-size: 13px;
         }
-        .login-link {
+        .register-link {
             text-align: center;
             margin-top: 20px;
             color: #666;
             font-size: 14px;
         }
-        .login-link a {
+        .register-link a {
             color: #0A1628;
             text-decoration: none;
             font-weight: 500;
         }
-        .login-link a:hover {
+        .register-link a:hover {
             color: #FFD700;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover {
+            color: #0A1628;
         }
         .loading-spinner {
             display: inline-block;
@@ -163,138 +158,105 @@
         <div class="auth-box">
             <div class="auth-header">
                 <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics Logo">
-                <h2>Create Account</h2>
-                <p>Register to access customer dashboard and services</p>
+                <h2>Welcome Back</h2>
+                <p>Sign in to access your dashboard</p>
             </div>
 
-            <div class="success-message" id="successMessage"></div>
             <div class="error-message" id="errorMessage"></div>
 
-            <form id="registerForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="firstName">First Name</label>
-                        <input type="text" id="firstName" name="firstName" required placeholder="John">
-                    </div>
-                    <div class="form-group">
-                        <label for="lastName">Last Name</label>
-                        <input type="text" id="lastName" name="lastName" required placeholder="Doe">
-                    </div>
-                </div>
-
+            <form id="loginForm">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="john@company.com">
+                    <input type="email" id="email" name="email" required placeholder="Enter your email">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="At least 6 characters" minlength="6">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password">
                 </div>
 
-                <div class="form-group">
-                    <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+254 700 000 000">
-                    </div>
-                    <div class="form-group">
-                        <label for="company">Company Name</label>
-                        <input type="text" id="company" name="company" placeholder="Your Company Ltd">
-                    </div>
-                </div>
-
-                <button type="submit" class="auth-button" id="registerButton">
-                    <i class="fas fa-user-plus"></i> Create Account
+                <button type="submit" class="auth-button" id="loginButton">
+                    <span>Sign In</span>
                     <span class="loading-spinner" id="spinner" style="display: none;"></span>
                 </button>
             </form>
 
             <div class="divider"><span>OR</span></div>
 
-            <p class="login-link">
-                Already have an account? <a href="login.html">Sign in</a>
+            <p class="register-link">
+                Don't have an account? <a href="register.html">Sign up</a>
             </p>
             
-            <p class="login-link">
-                <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Website</a>
-            </p>
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Website
+            </a>
         </div>
     </div>
 
     <script>
-        const registerForm = document.getElementById('registerForm');
-        const registerButton = document.getElementById('registerButton');
+        const loginForm = document.getElementById('loginForm');
+        const loginButton = document.getElementById('loginButton');
         const spinner = document.getElementById('spinner');
         const errorMessage = document.getElementById('errorMessage');
-        const successMessage = document.getElementById('successMessage');
+        const buttonText = loginButton.querySelector('span');
 
-        registerForm.addEventListener('submit', async (e) => {
+        loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
 
-            if (password !== confirmPassword) {
-                errorMessage.textContent = 'Passwords do not match';
-                errorMessage.style.display = 'block';
-                return;
-            }
-
-            const data = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                password: password,
-                phone: document.getElementById('phone').value,
-                company: document.getElementById('company').value
-            };
-
-            registerButton.disabled = true;
+            loginButton.disabled = true;
             spinner.style.display = 'inline-block';
+            buttonText.textContent = 'Signing in...';
             errorMessage.style.display = 'none';
-            successMessage.style.display = 'none';
 
             try {
-                const response = await fetch('/api/auth-register', {
+                const response = await fetch('/api/auth-login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify({ email, password })
                 });
 
-                const result = await response.json();
+                const data = await response.json();
 
                 if (response.ok) {
-                    localStorage.setItem('token', result.token);
-                    localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
 
-                    successMessage.textContent = 'Account created successfully! Redirecting to dashboard...';
-                    successMessage.style.display = 'block';
+                    if (data.user._testMode) {
+                        localStorage.setItem('_testMode', 'true');
+                    }
 
-                    setTimeout(() => {
+                    if (data.user.role === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
                         window.location.href = 'customer-dashboard.html';
-                    }, 1500);
+                    }
                 } else {
-                    errorMessage.textContent = result.error || 'Registration failed. Please try again.';
+                    errorMessage.textContent = data.error || 'Login failed. Please try again.';
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
                 errorMessage.textContent = 'Network error. Please try again.';
                 errorMessage.style.display = 'block';
             } finally {
-                registerButton.disabled = false;
+                loginButton.disabled = false;
                 spinner.style.display = 'none';
+                buttonText.textContent = 'Sign In';
             }
         });
 
         function checkAuth() {
             const token = localStorage.getItem('token');
-            if (token) {
-                window.location.href = 'customer-dashboard.html';
+            const user = JSON.parse(localStorage.getItem('user') || 'null');
+
+            if (token && user) {
+                if (user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else {
+                    window.location.href = 'customer-dashboard.html';
+                }
             }
         }
 

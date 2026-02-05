@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.netlify/
+
+# Environment files (keep .env.example)
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
+
+# Database
+*.db
+*.sqlite
+
+# Misc
+*.log
+cookies.txt
