@@ -650,6 +650,9 @@ async function handleGoogleAuth(idToken, googleId, userData) {
             ? '/.netlify/functions/auth-google' 
             : '/api/auth-google';
         
+        console.log('Google Auth - API URL:', apiUrl);
+        console.log('Google Auth - Email:', userData.email);
+        
         const response = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -660,7 +663,10 @@ async function handleGoogleAuth(idToken, googleId, userData) {
             })
         });
 
+        console.log('Google Auth - Response status:', response.status);
+        
         const data = await response.json();
+        console.log('Google Auth - Response data:', data);
 
         if (response.ok) {
             // Store token and user data
@@ -671,11 +677,11 @@ async function handleGoogleAuth(idToken, googleId, userData) {
             storage.setItem('loginTime', Date.now());
             return { success: true, user: data.user, isNewUser: data.isNewUser };
         } else {
-            return { success: false, error: data.error };
+            return { success: false, error: data.error || 'Authentication failed' };
         }
     } catch (error) {
         console.error('Google auth error:', error);
-        return { success: false, error: 'Authentication failed' };
+        return { success: false, error: 'Network error: ' + error.message };
     }
 }
 

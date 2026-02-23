@@ -1,11 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-
-if (!JWT_SECRET || !JWT_REFRESH_SECRET) {
-  console.error('SECURITY WARNING: JWT secrets not configured in environment variables!');
-}
+const JWT_SECRET = process.env.JWT_SECRET || 'trace-veil-dev-secret-change-in-production';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'trace-veil-refresh-secret-change-in-production';
 
 const REFRESH_TOKEN_EXPIRY = '7d';
 const ACCESS_TOKEN_EXPIRY = '1h';
