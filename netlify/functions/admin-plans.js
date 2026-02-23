@@ -1,21 +1,28 @@
-const { supabase } = require('../utils/database');
-const { requireAdmin } = require('../utils/auth');
-const { logActivity } = require('../utils/helpers');
+const localDB = require('./local-db');
+const { requireAdmin } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = requireAdmin(async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
   try {
     if (event.httpMethod === 'GET') {
-      const { data: plans, error } = await supabase
-        .from('service_plans')
-        .select('*, services(name, slug)')
-        .order('name');
+      const plans = localDB.readJSON(localDB.PLANS_FILE);
+      const services = localDB.readJSON(localDB.SERVICES_FILE);
 
-      if (error) throw error;
+      const plansWithServices = plans.map(plan => {
+        const service = services.find(s => s.id === plan.service_id);
+        return { ...plan, services: service ? { name: service.name, slug: service.slug } : null };
+      });
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plans })
+        headers: corsHeaders,
+        body: JSON.stringify({ plans: plansWithServices })
       };
     }
 
@@ -25,31 +32,38 @@ exports.handler = requireAdmin(async (event) => {
       if (!service_id || !name || !price) {
         return {
           statusCode: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Service ID, name, and price are required' })
         };
       }
 
-      const { data: plan, error } = await supabase
-        .from('service_plans')
-        .insert({ service_id, name, description, price, currency, billing_cycle, features, is_active })
-        .select()
-        .single();
+      const plan = {
+        id: localDB.generateId(),
+        service_id,
+        name,
+        description: description || '',
+        price,
+        currency: currency || 'KES',
+        billing_cycle: billing_cycle || 'monthly',
+        features: features || [],
+        is_active: is_active !== false,
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
-
-      await logActivity(event.user.userId, 'create_plan', 'service_plan', plan.id, { name, price });
+      const plans = localDB.readJSON(localDB.PLANS_FILE);
+      plans.push(plan);
+      localDB.writeJSON(localDB.PLANS_FILE, plans);
 
       return {
         statusCode: 201,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ plan })
       };
     }
 
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
 
@@ -57,7 +71,7 @@ exports.handler = requireAdmin(async (event) => {
     console.error('Plans error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

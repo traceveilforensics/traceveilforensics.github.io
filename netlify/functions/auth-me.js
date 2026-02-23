@@ -1,11 +1,22 @@
-const { supabase } = require('../utils/database');
-const { verifyToken } = require('../utils/auth');
+const localDB = require('./local-db');
+const { verifyToken } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: corsHeaders, body: '' };
+  }
+
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
@@ -16,7 +27,7 @@ exports.handler = async (event) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Unauthorized' })
       };
     }
@@ -27,34 +38,34 @@ exports.handler = async (event) => {
     if (!decoded) {
       return {
         statusCode: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Invalid token' })
       };
     }
 
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*, customers(id, company_name)')
-      .eq('id', decoded.userId)
-      .single();
+    const users = localDB.readJSON(localDB.USERS_FILE);
+    const user = users.find(u => u.id === decoded.userId);
 
-    if (error || !user) {
+    if (!user) {
       return {
         statusCode: 404,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'User not found' })
       };
     }
+
+    const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+    const customer = customers.find(c => c.user_id === user.id);
 
     const { password_hash, ...userWithoutPassword } = user;
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({
         user: {
           ...userWithoutPassword,
-          customerId: user.customers?.[0]?.id
+          customerId: customer?.id || null
         }
       })
     };
@@ -63,7 +74,7 @@ exports.handler = async (event) => {
     console.error('Get user error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

@@ -1,11 +1,19 @@
-const { supabaseAdmin } = require('../utils/database');
 const bcrypt = require('bcryptjs');
 
 exports.handler = async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers: corsHeaders, body: '' };
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
   }
@@ -16,7 +24,7 @@ exports.handler = async (event) => {
     if (!password) {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Password is required' })
       };
     }
@@ -24,7 +32,7 @@ exports.handler = async (event) => {
     if (password.length < 8) {
       return {
         statusCode: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ error: 'Password must be at least 8 characters' })
       };
     }
@@ -34,7 +42,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({
         password_hash,
         message: 'Password hash generated successfully'
@@ -45,7 +53,7 @@ exports.handler = async (event) => {
     console.error('Generate hash error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

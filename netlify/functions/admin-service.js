@@ -1,29 +1,32 @@
-const { supabase } = require('../utils/database');
-const { requireAdmin } = require('../utils/auth');
-const { logActivity } = require('../utils/helpers');
+const localDB = require('./local-db');
+const { requireAdmin } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = requireAdmin(async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
   try {
     const serviceId = event.path.split('/').pop();
 
     if (event.httpMethod === 'GET') {
-      const { data: service, error } = await supabase
-        .from('services')
-        .select('*, service_plans(*)')
-        .eq('id', serviceId)
-        .single();
+      const services = localDB.readJSON(localDB.SERVICES_FILE);
+      const service = services.find(s => s.id === serviceId);
 
-      if (error || !service) {
+      if (!service) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Service not found' })
         };
       }
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ service })
       };
     }
@@ -31,56 +34,57 @@ exports.handler = requireAdmin(async (event) => {
     if (event.httpMethod === 'PUT') {
       const { name, slug, description, icon, is_active } = JSON.parse(event.body);
 
-      const { data: service, error } = await supabase
-        .from('services')
-        .update({ name, slug, description, icon, is_active })
-        .eq('id', serviceId)
-        .select()
-        .single();
+      const services = localDB.readJSON(localDB.SERVICES_FILE);
+      const serviceIndex = services.findIndex(s => s.id === serviceId);
 
-      if (error || !service) {
+      if (serviceIndex === -1) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Service not found' })
         };
       }
 
-      await logActivity(event.user.userId, 'update_service', 'service', serviceId, { name, slug });
+      if (name) services[serviceIndex].name = name;
+      if (slug) services[serviceIndex].slug = slug;
+      if (description) services[serviceIndex].description = description;
+      if (icon) services[serviceIndex].icon = icon;
+      if (is_active !== undefined) services[serviceIndex].is_active = is_active;
+
+      localDB.writeJSON(localDB.SERVICES_FILE, services);
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service })
+        headers: corsHeaders,
+        body: JSON.stringify({ service: services[serviceIndex] })
       };
     }
 
     if (event.httpMethod === 'DELETE') {
-      const { error } = await supabase
-        .from('services')
-        .delete()
-        .eq('id', serviceId);
+      const services = localDB.readJSON(localDB.SERVICES_FILE);
+      const serviceIndex = services.findIndex(s => s.id === serviceId);
 
-      if (error) {
+      if (serviceIndex === -1) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Service not found' })
         };
       }
 
-      await logActivity(event.user.userId, 'delete_service', 'service', serviceId);
+      services.splice(serviceIndex, 1);
+      localDB.writeJSON(localDB.SERVICES_FILE, services);
 
       return {
         statusCode: 204,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({})
       };
     }
 
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
 
@@ -88,7 +92,7 @@ exports.handler = requireAdmin(async (event) => {
     console.error('Service detail error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

@@ -1,60 +1,70 @@
-const { supabase } = require('../utils/database');
-const { requireAdmin } = require('../utils/auth');
+const localDB = require('./local-db');
+const { requireAdmin } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = requireAdmin(async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
   try {
     if (event.httpMethod === 'GET') {
-      const { data: customers, error } = await supabase
-        .from('customers')
-        .select(`
-          *,
-          users (email, first_name, last_name, phone, company),
-          invoices (id, invoice_number, status, total, due_date),
-          service_requests (id, title, status)
-        `)
-        .order('created_at', { ascending: false });
+      const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+      const users = localDB.readJSON(localDB.USERS_FILE);
+      const invoices = localDB.readJSON(localDB.INVOICES_FILE);
+      const requests = localDB.readJSON(localDB.REQUESTS_FILE);
 
-      if (error) throw error;
+      const customersWithRelations = customers.map(c => {
+        const user = users.find(u => u.id === c.user_id);
+        return {
+          ...c,
+          users: user ? { email: user.email, first_name: user.first_name, last_name: user.last_name, phone: user.phone, company: user.company } : null,
+          invoices: invoices.filter(i => i.customer_id === c.id),
+          service_requests: requests.filter(r => r.customer_id === c.id)
+        };
+      });
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customers })
+        headers: corsHeaders,
+        body: JSON.stringify({ customers: customersWithRelations })
       };
     }
 
     if (event.httpMethod === 'POST') {
-      const { user_id, company_name, tax_id, billing_address, billing_city, billing_state, billing_postal_code, billing_country, notes } = JSON.parse(event.body);
+      const { user_id, company_name } = JSON.parse(event.body);
 
       if (!user_id) {
         return {
           statusCode: 400,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'User ID is required' })
         };
       }
 
-      const { data: customer, error } = await supabase
-        .from('customers')
-        .insert({ user_id, company_name, tax_id, billing_address, billing_city, billing_state, billing_postal_code, billing_country, notes })
-        .select(`
-          *,
-          users (email, first_name, last_name, phone, company)
-        `)
-        .single();
+      const customer = {
+        id: localDB.generateId(),
+        user_id,
+        company_name: company_name || '',
+        created_at: new Date().toISOString()
+      };
 
-      if (error) throw error;
+      const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+      customers.push(customer);
+      localDB.writeJSON(localDB.CUSTOMERS_FILE, customers);
 
       return {
         statusCode: 201,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({ customer })
       };
     }
 
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
 
@@ -62,7 +72,7 @@ exports.handler = requireAdmin(async (event) => {
     console.error('Customers error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

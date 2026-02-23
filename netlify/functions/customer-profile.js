@@ -1,82 +1,74 @@
-const { supabase } = require('../utils/database');
-const { requireAuth } = require('../utils/auth');
-const { logActivity } = require('../utils/helpers');
+const localDB = require('./local-db');
+const { requireAuth } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = requireAuth(async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
   try {
     if (event.httpMethod === 'GET') {
-      const { data: customer, error } = await supabase
-        .from('customers')
-        .select(`
-          *,
-          users (email, first_name, last_name, phone, company)
-        `)
-        .eq('user_id', event.user.userId)
-        .single();
+      const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+      const users = localDB.readJSON(localDB.USERS_FILE);
+      
+      const customer = customers.find(c => c.user_id === event.user.userId);
+      const user = users.find(u => u.id === event.user.userId);
 
-      if (error || !customer) {
+      if (!customer) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Customer profile not found' })
         };
       }
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer })
+        headers: corsHeaders,
+        body: JSON.stringify({ customer: { ...customer, users: user } })
       };
     }
 
     if (event.httpMethod === 'PUT') {
-      const { company_name, tax_id, billing_address, billing_city, billing_state, billing_postal_code, billing_country, first_name, last_name, phone } = JSON.parse(event.body);
+      const { company_name, first_name, last_name, phone } = JSON.parse(event.body);
 
-      const { data: customer, error: customerError } = await supabase
-        .from('customers')
-        .update({
-          company_name,
-          tax_id,
-          billing_address,
-          billing_city,
-          billing_state,
-          billing_postal_code,
-          billing_country
-        })
-        .eq('user_id', event.user.userId)
-        .select()
-        .single();
+      const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+      const users = localDB.readJSON(localDB.USERS_FILE);
+      
+      const customerIndex = customers.findIndex(c => c.user_id === event.user.userId);
+      const userIndex = users.findIndex(u => u.id === event.user.userId);
 
-      if (customerError) throw customerError;
+      if (customerIndex === -1) {
+        return {
+          statusCode: 404,
+          headers: corsHeaders,
+          body: JSON.stringify({ error: 'Customer not found' })
+        };
+      }
 
-      const { error: userError } = await supabase
-        .from('users')
-        .update({ first_name, last_name, phone })
-        .eq('id', event.user.userId);
+      if (company_name) customers[customerIndex].company_name = company_name;
+      localDB.writeJSON(localDB.CUSTOMERS_FILE, customers);
 
-      if (userError) throw userError;
-
-      await logActivity(event.user.userId, 'update_profile', 'customer', customer.id);
-
-      const { data: updatedCustomer } = await supabase
-        .from('customers')
-        .select(`
-          *,
-          users (email, first_name, last_name, phone, company)
-        `)
-        .eq('user_id', event.user.userId)
-        .single();
+      if (userIndex !== -1) {
+        if (first_name) users[userIndex].first_name = first_name;
+        if (last_name) users[userIndex].last_name = last_name;
+        if (phone) users[userIndex].phone = phone;
+        localDB.writeJSON(localDB.USERS_FILE, users);
+      }
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customer: updatedCustomer })
+        headers: corsHeaders,
+        body: JSON.stringify({ customer: customers[customerIndex] })
       };
     }
 
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
 
@@ -84,7 +76,7 @@ exports.handler = requireAuth(async (event) => {
     console.error('Customer profile error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }

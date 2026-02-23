@@ -1,113 +1,90 @@
-const { supabase } = require('../utils/database');
-const { requireAdmin } = require('../utils/auth');
-const { logActivity, sendEmail, generateInvoiceEmail, formatDate } = require('../utils/helpers');
+const localDB = require('./local-db');
+const { requireAdmin } = require('./utils/auth');
+
+localDB.initDB();
 
 exports.handler = requireAdmin(async (event) => {
+  const corsHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*'
+  };
+
   try {
     const invoiceId = event.path.split('/').pop();
 
     if (event.httpMethod === 'GET') {
-      const { data: invoice, error } = await supabase
-        .from('invoices')
-        .select(`
-          *,
-          customers (company_name, billing_address, billing_city, billing_state, billing_postal_code, billing_country, users(email, first_name, last_name)),
-          invoice_items (*, services(name), service_plans(name)),
-          payment_transactions (*)
-        `)
-        .eq('id', invoiceId)
-        .single();
+      const invoices = localDB.readJSON(localDB.INVOICES_FILE);
+      const invoice = invoices.find(i => i.id === invoiceId);
 
-      if (error || !invoice) {
+      if (!invoice) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Invoice not found' })
         };
       }
 
+      const customers = localDB.readJSON(localDB.CUSTOMERS_FILE);
+      const users = localDB.readJSON(localDB.USERS_FILE);
+      const customer = customers.find(c => c.id === invoice.customer_id);
+      const user = customer ? users.find(u => u.id === customer.user_id) : null;
+
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoice })
+        headers: corsHeaders,
+        body: JSON.stringify({ invoice: { ...invoice, customers: { ...customer, users: user } } })
       };
     }
 
     if (event.httpMethod === 'PUT') {
-      const { status, issue_date, due_date, notes } = JSON.parse(event.body);
+      const { status } = JSON.parse(event.body);
 
-      const { data: invoice, error: updateError } = await supabase
-        .from('invoices')
-        .update({ status, issue_date, due_date, notes })
-        .eq('id', invoiceId)
-        .select(`
-          *,
-          customers (company_name, users(email, first_name, last_name))
-        `)
-        .single();
+      const invoices = localDB.readJSON(localDB.INVOICES_FILE);
+      const invoiceIndex = invoices.findIndex(i => i.id === invoiceId);
 
-      if (updateError || !invoice) {
+      if (invoiceIndex === -1) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Invoice not found' })
         };
       }
 
-      await logActivity(event.user.userId, 'update_invoice', 'invoice', invoiceId, { status });
-
-      if (status === 'sent') {
-        const { data: fullInvoice } = await supabase
-          .from('invoices')
-          .select(`
-            *,
-            customers (company_name, users(email, first_name, last_name)),
-            invoice_items (*)
-          `)
-          .eq('id', invoiceId)
-          .single();
-
-        const html = generateInvoiceEmail(fullInvoice, fullInvoice.customers, fullInvoice.invoice_items);
-        await sendEmail(
-          fullInvoice.customers.users.email,
-          `Invoice ${fullInvoice.invoice_number} from Trace Veil Forensics`,
-          html
-        );
-      }
+      if (status) invoices[invoiceIndex].status = status;
+      localDB.writeJSON(localDB.INVOICES_FILE, invoices);
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoice })
+        headers: corsHeaders,
+        body: JSON.stringify({ invoice: invoices[invoiceIndex] })
       };
     }
 
     if (event.httpMethod === 'DELETE') {
-      const { error } = await supabase
-        .from('invoices')
-        .delete()
-        .eq('id', invoiceId);
+      const invoices = localDB.readJSON(localDB.INVOICES_FILE);
+      const invoiceIndex = invoices.findIndex(i => i.id === invoiceId);
 
-      if (error) {
+      if (invoiceIndex === -1) {
         return {
           statusCode: 404,
-          headers: { 'Content-Type': 'application/json' },
+          headers: corsHeaders,
           body: JSON.stringify({ error: 'Invoice not found' })
         };
       }
 
-      await logActivity(event.user.userId, 'delete_invoice', 'invoice', invoiceId);
+      invoices.splice(invoiceIndex, 1);
+      localDB.writeJSON(localDB.INVOICES_FILE, invoices);
 
       return {
         statusCode: 204,
-        headers: { 'Content-Type': 'application/json' },
+        headers: corsHeaders,
         body: JSON.stringify({})
       };
     }
 
     return {
       statusCode: 405,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     };
 
@@ -115,7 +92,7 @@ exports.handler = requireAdmin(async (event) => {
     console.error('Invoice detail error:', error);
     return {
       statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
+      headers: corsHeaders,
       body: JSON.stringify({ error: 'Internal server error' })
     };
   }
