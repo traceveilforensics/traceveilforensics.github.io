@@ -147,6 +147,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script>
         const loginForm = document.getElementById('loginForm');
         const loginButton = document.getElementById('loginButton');
@@ -164,29 +165,26 @@
             errorMessage.style.display = 'none';
 
             try {
-                const response = await fetch('/.netlify/functions/auth-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
+                // Use client-side authentication
+                const result = window.authSystem.login(email, password);
 
-                const data = await response.json();
+                if (result.success) {
+                    const token = window.authSystem.generateToken();
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('loginTime', Date.now());
 
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-
-                    if (data.user.role === 'admin') {
+                    if (result.user.role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
                     } else {
                         window.location.href = 'customer-dashboard.html';
                     }
                 } else {
-                    errorMessage.textContent = data.error || 'Login failed. Please try again.';
+                    errorMessage.textContent = result.error || 'Login failed. Please try again.';
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {
-                errorMessage.textContent = 'Network error. Please try again.';
+                errorMessage.textContent = 'An error occurred. Please try again.';
                 errorMessage.style.display = 'block';
             } finally {
                 loginButton.disabled = false;
@@ -194,20 +192,15 @@
             }
         });
 
-        function checkAuth() {
-            const token = localStorage.getItem('token');
-            const user = JSON.parse(localStorage.getItem('user'));
-
-            if (token && user) {
-                if (user.role === 'admin') {
-                    window.location.href = 'admin-dashboard.html';
-                } else {
-                    window.location.href = 'customer-dashboard.html';
-                }
+        // Check if already logged in
+        if (window.authSystem.isAuthenticated()) {
+            const user = window.authSystem.getCurrentUser();
+            if (user.role === 'admin') {
+                window.location.href = 'admin-dashboard.html';
+            } else {
+                window.location.href = 'customer-dashboard.html';
             }
         }
-
-        checkAuth();
     </script>
 </body>
 </html>

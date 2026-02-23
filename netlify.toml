@@ -9,6 +9,7 @@
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/admin/*"
@@ -49,7 +50,7 @@
   directory = "netlify/functions"
 
 [dev]
-  command = "npx serve ."
-  port = 3000
-  targetPort = 80
+  command = "npx netlify dev"
+  port = 8888
+  targetPort = 8888
   autoLaunch = false

@@ -1,50 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
    <url>
-      <loc>https://www.traceveilforensics.com/</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>monthly</changefreq>
       <priority>1.0</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/services.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/services.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.9</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/about.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/about.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/pricing.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/pricing.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/contact.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/contact.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/privacy-policy.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/login.html</loc>
+      <lastmod>2026-02-23</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.5</priority>
+   </url>
+   <url>
+      <loc>https://traceveilforensics.netlify.app/register.html</loc>
+      <lastmod>2026-02-23</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.5</priority>
+   </url>
+   <url>
+      <loc>https://traceveilforensics.netlify.app/privacy-policy.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/terms-of-service.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/terms-of-service.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
    </url>
    <url>
-      <loc>https://www.traceveilforensics.com/service-agreement.html</loc>
-      <lastmod>2025-01-04</lastmod>
+      <loc>https://traceveilforensics.netlify.app/service-agreement.html</loc>
+      <lastmod>2026-02-23</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
    </url>

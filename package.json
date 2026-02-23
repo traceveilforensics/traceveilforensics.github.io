@@ -9,7 +9,10 @@
     "hash": "node password.js",
     "hash:compare": "node password.js compare",
     "hash:generate": "node password.js",
-    "start": "npx serve -l 8888 ."
+    "start": "npx serve -l 8888 .",
+    "dev": "npx serve -l 3000 .",
+    "server": "node server.js",
+    "install:all": "npm install && cd functions && npm install 2>/dev/null || true"
   },
   "keywords": [
     "cybersecurity",
@@ -23,6 +26,7 @@
     "@supabase/supabase-js": "^2.39.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^2.2.2",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",

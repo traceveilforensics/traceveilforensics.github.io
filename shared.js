@@ -24,6 +24,7 @@ function updateAuthUI(isLoggedIn) {
     const authButtons = document.getElementById('authButtons');
     const userMenu = document.getElementById('userMenu');
     const userDisplayName = document.getElementById('userDisplayName');
+    const userDropdown = document.getElementById('userDropdown');
     
     if (isLoggedIn && currentUser) {
         if (authButtons) authButtons.style.display = 'none';
@@ -31,6 +32,34 @@ function updateAuthUI(isLoggedIn) {
             userMenu.style.display = 'block';
             if (userDisplayName) {
                 userDisplayName.textContent = currentUser.first_name || currentUser.email;
+            }
+            // Update dropdown based on role
+            if (userDropdown) {
+                if (currentUser.role === 'admin') {
+                    userDropdown.innerHTML = `
+                        <li><a href="admin-dashboard.html"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
+                        <li><a href="index.html"><i class="fas fa-globe"></i> View Website</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    `;
+                } else {
+                    userDropdown.innerHTML = `
+                        <li><a href="customer-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="customer-dashboard.html?tab=invoices"><i class="fas fa-file-invoice"></i> My Invoices</a></li>
+                        <li><a href="customer-dashboard.html?tab=requests"><i class="fas fa-clipboard-list"></i> Service Requests</a></li>
+                        <li><a href="customer-dashboard.html?tab=profile"><i class="fas fa-user"></i> Profile</a></li>
+                        <li class="divider"></li>
+                        <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    `;
+                }
+                // Re-attach logout handler
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        logout();
+                    });
+                }
             }
         }
     } else {
@@ -105,6 +134,15 @@ function setupUserMenuDropdown() {
         document.addEventListener('click', () => {
             userDropdown.classList.remove('show');
         });
+        
+        // Setup logout button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        }
     }
 }
 

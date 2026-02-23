@@ -30,6 +30,7 @@ coverage/
 # Database
 *.db
 *.sqlite
+data/
 
 # Misc
 *.log
