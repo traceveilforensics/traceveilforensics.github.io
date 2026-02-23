@@ -2,22 +2,34 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const isNetlify = process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
-const DATA_DIR = isNetlify 
-  ? path.join(process.cwd(), 'data')
-  : path.join(__dirname, '..', 'data');
+// Try different possible locations for data directory
+const possiblePaths = [
+  path.join(__dirname, '..', 'data'),
+  path.join(process.cwd(), 'data'),
+  path.join(__dirname, 'data'),
+  '/tmp/data'
+];
 
-console.log('Data directory:', DATA_DIR);
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  console.log('Creating data directory...');
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  } catch (err) {
-    console.error('Failed to create data directory:', err);
+let DATA_DIR = null;
+for (const dir of possiblePaths) {
+  if (fs.existsSync(dir)) {
+    DATA_DIR = dir;
+    break;
   }
 }
+
+if (!DATA_DIR) {
+  DATA_DIR = possiblePaths[0];
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  } catch (e) {
+    DATA_DIR = '/tmp/data';
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+}
+
+console.log('Data directory:', DATA_DIR);
+console.log('Files in parent:', fs.readdirSync(path.join(__dirname, '..')));
 
 const files = {
   users: path.join(DATA_DIR, 'users.json'),
