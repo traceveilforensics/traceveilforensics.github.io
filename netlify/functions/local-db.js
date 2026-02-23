@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DATA_DIR = '../data';
+const DATA_DIR = path.join(__dirname, '..', 'data');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
