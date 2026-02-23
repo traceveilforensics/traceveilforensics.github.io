@@ -1,0 +1,181 @@
+[
+  {
+    "id": "p1",
+    "service_id": "s1",
+    "name": "Basic Assessment",
+    "description": "Essential security review",
+    "price": 2500,
+    "billing_cycle": "one_time",
+    "features": [
+      "Basic security check",
+      "Vulnerability scan",
+      "Summary report"
+    ]
+  },
+  {
+    "id": "p2",
+    "service_id": "s1",
+    "name": "Professional Assessment",
+    "description": "Complete security audit",
+    "price": 75000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Deep analysis",
+      "Application review",
+      "Policy review",
+      "Detailed report"
+    ]
+  },
+  {
+    "id": "p3",
+    "service_id": "s2",
+    "name": "Basic Scan",
+    "description": "Automated vulnerability scan",
+    "price": 15000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Auto scan",
+      "Basic report"
+    ]
+  },
+  {
+    "id": "p4",
+    "service_id": "s2",
+    "name": "Advanced Scan",
+    "description": "Full vulnerability assessment",
+    "price": 35000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Manual + auto testing",
+      "Detailed report",
+      "Risk assessment"
+    ]
+  },
+  {
+    "id": "p5",
+    "service_id": "s3",
+    "name": "Basic Response",
+    "description": "Emergency incident handling",
+    "price": 50000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Immediate response",
+      "Containment",
+      "Basic investigation"
+    ]
+  },
+  {
+    "id": "p6",
+    "service_id": "s3",
+    "name": "Full Response",
+    "description": "Complete incident management",
+    "price": 150000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Full investigation",
+      "Forensic analysis",
+      "Recovery",
+      "Post-incident report"
+    ]
+  },
+  {
+    "id": "p7",
+    "service_id": "s4",
+    "name": "Basic Forensics",
+    "description": "Standard investigation",
+    "price": 100000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Evidence collection",
+      "Basic analysis",
+      "Report"
+    ]
+  },
+  {
+    "id": "p8",
+    "service_id": "s4",
+    "name": "Advanced Forensics",
+    "description": "Comprehensive analysis",
+    "price": 250000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Complete investigation",
+      "Expert testimony ready",
+      "Full documentation"
+    ]
+  },
+  {
+    "id": "p9",
+    "service_id": "s5",
+    "name": "Basic Support",
+    "description": "Essential IT help",
+    "price": 15000,
+    "currency": "KES",
+    "billing_cycle": "monthly",
+    "features": [
+      "Help desk",
+      "Basic monitoring"
+    ]
+  },
+  {
+    "id": "p10",
+    "service_id": "s5",
+    "name": "Enterprise Support",
+    "description": "Full IT management",
+    "price": 75000,
+    "currency": "KES",
+    "billing_cycle": "monthly",
+    "features": [
+      "24/7 support",
+      "Full monitoring",
+      "Proactive maintenance"
+    ]
+  },
+  {
+    "id": "p11",
+    "service_id": "s6",
+    "name": "Phishing Training",
+    "description": "Basic phishing awareness",
+    "price": 10000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Phishing simulation",
+      "Basic training"
+    ]
+  },
+  {
+    "id": "p12",
+    "service_id": "s6",
+    "name": "Full Security Training",
+    "description": "Complete awareness program",
+    "price": 50000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "All security topics",
+      "Hands-on training",
+      "Certification"
+    ]
+  },
+  {
+    "id": "29b5d9d0-0d87-41c6-a2c5-08bd65ae7d32",
+    "service_id": "s6",
+    "name": "Basic Linux",
+    "description": "Kali Linux fundamentals",
+    "price": 1000,
+    "billing_cycle": "one_time",
+    "features": [
+      "Linux basics",
+      "Command line usage",
+      "Security tools intro"
+    ]
+  }
+]

@@ -2,30 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// Try different possible locations for data directory
-const possiblePaths = [
-  path.join(__dirname, '..', 'data'),
-  path.join(process.cwd(), 'data'),
-  path.join(__dirname, 'data'),
-  '/tmp/data'
-];
+// Use bundled data in function directory
+const DATA_DIR = path.join(__dirname, 'data');
 
-let DATA_DIR = null;
-for (const dir of possiblePaths) {
-  if (fs.existsSync(dir)) {
-    DATA_DIR = dir;
-    break;
-  }
-}
+console.log('Data directory:', DATA_DIR);
+console.log('Directory exists:', fs.existsSync(DATA_DIR));
 
-if (!DATA_DIR) {
-  DATA_DIR = possiblePaths[0];
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  } catch (e) {
-    DATA_DIR = '/tmp/data';
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
 console.log('Data directory:', DATA_DIR);

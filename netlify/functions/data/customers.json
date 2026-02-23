@@ -1,0 +1,31 @@
+[
+  {
+    "id": "e90b4942-d2b8-4224-825a-c19b0f835750",
+    "user_id": "5bc84f50-3a3f-4911-b4a2-e09db307fb27",
+    "company_name": "Test Corp",
+    "created_at": "2026-02-04T15:54:51.267Z"
+  },
+  {
+    "id": "b2f59413-6a12-438d-a0f5-274bf7195a21",
+    "user_id": "1082e9f7-a35a-4547-93e5-f4f61ab9474a",
+    "company_name": "copa",
+    "created_at": "2026-02-04T16:03:17.774Z"
+  },
+  {
+    "id": "89fc7f96-7615-4407-9a51-a28044dada84",
+    "user_id": "2b8beaea-b2c1-454c-a6d7-0e11b9ef6234",
+    "company_name": "Test Corp",
+    "created_at": "2026-02-07T11:04:21.278Z"
+  },
+  {
+    "id": "d9c2a493-c36a-4c5b-82b5-f41aa1cd561c",
+    "user_id": "4fac5faa-891d-40a3-8e70-c0038d705333",
+    "company_name": "Another Corp",
+    "created_at": "2026-02-08T12:05:36.551Z"
+  },
+  {
+    "id": "184cdef5-d31e-40f9-8f98-3f1580cafe3d",
+    "user_id": "1cc03373-6fb5-4a05-95f5-1d198354c486",
+    "created_at": "2026-02-15T20:28:54.475Z"
+  }
+]

@@ -1,0 +1,25 @@
+[
+  {
+    "key": "admin_settings",
+    "data": {
+      "siteName": "Trace Veil Forensics - Updated",
+      "supportEmail": "traceveilforensics@gmail.com",
+      "phone": "+254 731 570 131",
+      "address": "Nakuru, Kenya, East Africa",
+      "invoicePrefix": "TVF-",
+      "invoiceDueDays": 30,
+      "currency": "KES",
+      "taxRate": 0,
+      "emailNotifications": true,
+      "invoiceReminders": true,
+      "registrationEnabled": true,
+      "maintenanceMode": false,
+      "social": {
+        "facebook": "https://www.facebook.com/profiles/61586541184898",
+        "twitter": "https://x.com/trace_veil98613",
+        "instagram": "https://www.instagram.com/traceveilforensics",
+        "linkedin": "https://www.linkedin.com/in/traceveilforensics"
+      }
+    }
+  }
+]
