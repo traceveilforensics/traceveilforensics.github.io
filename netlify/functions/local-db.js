@@ -2,10 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-const DATA_DIR = path.join(__dirname, '..', 'data');
+const DATA_DIR = path.resolve(__dirname, '..', '..', 'data');
+
+console.log('Data directory:', DATA_DIR);
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
+  console.log('Creating data directory...');
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
