@@ -615,6 +615,14 @@ p {
     display: flex;
   }
   
+  .mobile-auth-buttons {
+    display: flex;
+  }
+  
+  .header-actions .auth-buttons {
+    display: none;
+  }
+  
   .nav-menu {
     position: fixed;
     top: var(--header-height);
@@ -671,16 +679,6 @@ p {
   .mobile-auth-buttons .btn {
     width: 100%;
     justify-content: center;
-  }
-}
-
-@media (max-width: 1024px) {
-  .mobile-auth-buttons {
-    display: flex;
-  }
-  
-  .header-actions .auth-buttons {
-    display: none;
   }
 }
 
