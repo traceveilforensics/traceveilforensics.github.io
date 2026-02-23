@@ -351,6 +351,10 @@ p {
   font-size: 14px;
 }
 
+.mobile-auth-buttons {
+  display: none;
+}
+
 .btn-sm {
   padding: 8px 16px;
   font-size: 14px;
@@ -616,11 +620,20 @@ p {
   }
   
   .mobile-auth-buttons {
-    display: flex;
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    padding: 0 20px 20px;
+  }
+  
+  .mobile-auth-buttons .btn {
+    width: 100%;
+    justify-content: center;
   }
   
   .header-actions .auth-buttons {
-    display: none;
+    display: none !important;
   }
   
   .nav-menu {
@@ -664,19 +677,6 @@ p {
   }
   
   .auth-buttons .btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .mobile-auth-buttons {
-    display: none;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-    padding: 0 20px 20px;
-  }
-  
-  .mobile-auth-buttons .btn {
     width: 100%;
     justify-content: center;
   }
