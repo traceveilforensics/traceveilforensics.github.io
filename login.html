@@ -178,9 +178,6 @@
         };
         
         async function handleGoogleCredential(response) {
-            const btn = document.getElementById('googleLoginBtn');
-            const btnText = document.getElementById('googleBtnText');
-            
             if (!response.credential) {
                 console.log('No credential in response');
                 return;

@@ -615,13 +615,6 @@ p {
     display: flex;
   }
   
-  .header-actions {
-    position: absolute;
-    right: 70px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  
   .nav-menu {
     position: fixed;
     top: var(--header-height);
