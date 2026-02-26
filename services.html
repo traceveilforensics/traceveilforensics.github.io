@@ -370,12 +370,44 @@
     <!-- JavaScript -->
     <script src="shared.js"></script>
     <script>
-        // Additional services page initialization
+        // Immediate setup - run immediately and on DOMContentLoaded
+        (function() {
+            console.log('Running immediate menu setup for services.html');
+            var btn = document.getElementById('mobileMenuBtn');
+            var menu = document.getElementById('navMenu');
+            var overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (btn && menu) {
+                console.log('Found elements, adding click handler');
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    console.log('Button clicked, toggling menu');
+                    menu.classList.toggle('active');
+                    if (overlay) overlay.classList.toggle('active');
+                    btn.classList.toggle('active');
+                    btn.innerHTML = menu.classList.contains('active') 
+                        ? '<i class="fas fa-times"></i>' 
+                        : '<i class="fas fa-bars"></i>';
+                };
+                console.log('Click handler added');
+            } else {
+                console.log('Elements NOT found - btn:', btn, 'menu:', menu);
+            }
+        })();
+        
         document.addEventListener('DOMContentLoaded', function() {
-            setupMobileMenu();
-            setupHeaderScroll();
-            setupThemeToggle();
-            checkAuth();
+            if (typeof setupMobileMenu === 'function') {
+                setupMobileMenu();
+            }
+            if (typeof setupHeaderScroll === 'function') {
+                setupHeaderScroll();
+            }
+            if (typeof setupThemeToggle === 'function') {
+                setupThemeToggle();
+            }
+            if (typeof checkAuth === 'function') {
+                checkAuth();
+            }
         });
     </script>
 </body>

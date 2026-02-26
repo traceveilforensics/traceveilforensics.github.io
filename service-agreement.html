@@ -333,9 +333,28 @@
     <!-- JavaScript -->
     <script src="shared.js"></script>
     <script>
+        // Immediate setup
+        (function() {
+            var btn = document.getElementById('mobileMenuBtn');
+            var menu = document.getElementById('navMenu');
+            var overlay = document.getElementById('mobileMenuOverlay');
+            
+            if (btn && menu) {
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    menu.classList.toggle('active');
+                    if (overlay) overlay.classList.toggle('active');
+                    btn.classList.toggle('active');
+                    btn.innerHTML = menu.classList.contains('active') 
+                        ? '<i class="fas fa-times"></i>' 
+                        : '<i class="fas fa-bars"></i>';
+                };
+            }
+        })();
+        
         document.addEventListener('DOMContentLoaded', function() {
-            setupMobileMenu();
-            setupHeaderScroll();
+            if (typeof setupMobileMenu === 'function') setupMobileMenu();
+            if (typeof setupHeaderScroll === 'function') setupHeaderScroll();
         });
 
         // Smooth scroll for anchor links
