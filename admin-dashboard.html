@@ -3790,25 +3790,48 @@
             }
 
             try {
-                const customers = window.authSystem.getCustomers();
-                const adminIndex = customers.findIndex(c => c.email === currentUser.email);
+                const userEmail = currentUser.email;
+                console.log('Looking for user:', userEmail);
+                
+                // Check registered_users first (admin is stored here)
+                const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '{}');
+                let found = false;
+                
+                for (const [key, user] of Object.entries(registeredUsers)) {
+                    if (user.email.toLowerCase() === userEmail.toLowerCase()) {
+                        console.log('Found in registered_users:', user);
+                        if (user.password !== currentPassword) {
+                            showPasswordMsg('Current password is incorrect', 'error');
+                            return;
+                        }
+                        user.password = newPassword;
+                        localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
+                        found = true;
+                        break;
+                    }
+                }
+                
+                // Also check customers
+                if (!found) {
+                    const customers = window.authSystem.getCustomers();
+                    const adminIndex = customers.findIndex(c => c.email.toLowerCase() === userEmail.toLowerCase());
+                    
+                    if (adminIndex !== -1) {
+                        if (customers[adminIndex].password !== currentPassword) {
+                            showPasswordMsg('Current password is incorrect', 'error');
+                            return;
+                        }
+                        customers[adminIndex].password = newPassword;
+                        customers[adminIndex].password_changed_at = new Date().toISOString();
+                        window.authSystem.saveCustomers(customers);
+                        found = true;
+                    }
+                }
 
-                if (adminIndex === -1) {
+                if (!found) {
                     showPasswordMsg('Admin user not found', 'error');
                     return;
                 }
-
-                const storedPassword = customers[adminIndex].password;
-
-                // Passwords are stored in plain text
-                if (storedPassword !== currentPassword) {
-                    showPasswordMsg('Current password is incorrect', 'error');
-                    return;
-                }
-
-                customers[adminIndex].password = newPassword;
-                customers[adminIndex].password_changed_at = new Date().toISOString();
-                window.authSystem.saveCustomers(customers);
 
                 showPasswordMsg('Password changed successfully!', 'success');
 
