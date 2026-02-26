@@ -3839,10 +3839,18 @@
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
 
-                window.authSystem.addNotification({
-                    type: 'password_changed',
-                    message: `Password changed for ${currentUser.email}`
-                });
+                // Add notification manually
+                try {
+                    const notifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]');
+                    notifications.unshift({
+                        id: Date.now(),
+                        type: 'password_changed',
+                        message: `Password changed for ${currentUser.email}`,
+                        timestamp: new Date().toISOString(),
+                        read: false
+                    });
+                    localStorage.setItem('admin_notifications', JSON.stringify(notifications.slice(0, 50)));
+                } catch(e) {}
 
             } catch (error) {
                 console.error('Password change error:', error);
