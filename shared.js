@@ -81,20 +81,27 @@ function setupMobileMenu() {
     const navMenu = document.getElementById('navMenu');
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     
-    if (!mobileMenuBtn || !navMenu) return;
+    console.log('setupMobileMenu called', { mobileMenuBtn, navMenu, mobileMenuOverlay });
     
-    function toggleMobileMenu() {
+    if (!mobileMenuBtn || !navMenu) {
+        console.warn('Mobile menu elements not found');
+        return;
+    }
+    
+    function toggleMobileMenu(e) {
+        e.preventDefault();
+        e.stopPropagation();
         const isActive = navMenu.classList.contains('active');
         
+        console.log('Toggle menu, currently active:', isActive);
+        
         if (isActive) {
-            // Close menu
             navMenu.classList.remove('active');
             if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
             mobileMenuBtn.classList.remove('active');
             mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
             document.body.style.overflow = '';
         } else {
-            // Open menu
             navMenu.classList.add('active');
             if (mobileMenuOverlay) mobileMenuOverlay.classList.add('active');
             mobileMenuBtn.classList.add('active');
@@ -112,16 +119,18 @@ function setupMobileMenu() {
     }
     
     mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    
     if (mobileMenuOverlay) {
         mobileMenuOverlay.addEventListener('click', closeMobileMenu);
     }
     
-    // Close on escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && navMenu.classList.contains('active')) {
             closeMobileMenu();
         }
     });
+    
+    console.log('Mobile menu setup complete');
 }
 
 function setupHeaderScroll() {
