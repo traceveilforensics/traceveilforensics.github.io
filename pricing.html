@@ -747,7 +747,11 @@
             document.getElementById('pricingContent').innerHTML = html;
         }
 
-        document.addEventListener('DOMContentLoaded', loadPricing);
+        document.addEventListener('DOMContentLoaded', function() {
+            setupMobileMenu();
+            setupHeaderScroll();
+            loadPricing();
+        });
     </script>
 </body>
 </html>

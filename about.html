@@ -517,6 +517,11 @@
     <!-- JavaScript -->
     <script src="shared.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setupMobileMenu();
+            setupHeaderScroll();
+        });
+
         // Dark Mode Toggle
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = themeToggle ? themeToggle.querySelector('i') : null;
