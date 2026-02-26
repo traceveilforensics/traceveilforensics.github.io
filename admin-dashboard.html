@@ -3764,11 +3764,10 @@
             }, 3000);
         }
 
-        async function changeAdminPassword() {
+        function changeAdminPassword() {
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            const msgBox = document.getElementById('passwordChangeMsg');
 
             if (!currentPassword || !newPassword || !confirmPassword) {
                 showPasswordMsg('Please fill in all fields', 'error');
@@ -3800,21 +3799,14 @@
                 }
 
                 const storedPassword = customers[adminIndex].password;
-                
-                const crypto = window.crypto || window.msCrypto;
-                const encoder = new TextEncoder();
-                const currentHash = Array.from(crypto.subtle.digest('SHA-256', encoder.encode(currentPassword)))
-                    .map(b => b.toString(16).padStart(2, '0')).join('');
 
-                if (currentHash !== storedPassword) {
+                // Passwords are stored in plain text
+                if (storedPassword !== currentPassword) {
                     showPasswordMsg('Current password is incorrect', 'error');
                     return;
                 }
 
-                const newHash = Array.from(crypto.subtle.digest('SHA-256', encoder.encode(newPassword)))
-                    .map(b => b.toString(16).padStart(2, '0')).join('');
-
-                customers[adminIndex].password = newHash;
+                customers[adminIndex].password = newPassword;
                 customers[adminIndex].password_changed_at = new Date().toISOString();
                 window.authSystem.saveCustomers(customers);
 
