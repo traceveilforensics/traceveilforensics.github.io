@@ -50,9 +50,6 @@
     Access-Control-Allow-Headers = "Content-Type, Authorization"
     Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
 
-[functions]
-  directory = "netlify/functions"
-
 [dev]
   command = "npx netlify dev"
   port = 8888
