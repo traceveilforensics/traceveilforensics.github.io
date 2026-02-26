@@ -606,12 +606,48 @@ p {
 /* Mobile Menu */
 .mobile-menu-btn {
   display: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
   color: var(--text-primary);
-  font-size: var(--font-size-xl);
+  font-size: 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, #ffc107 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+  transition: all 0.3s ease;
+  z-index: 1001;
+}
+
+.mobile-menu-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+}
+
+.mobile-menu-btn.active {
+  background: var(--bg-secondary);
+  color: var(--accent);
+}
+
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+  display: block;
+  opacity: 1;
 }
 
 @media (max-width: 1024px) {
@@ -622,14 +658,16 @@ p {
   .mobile-auth-buttons {
     display: flex !important;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
-    padding: 0 20px 20px;
+    padding: 0 20px 30px;
   }
   
   .mobile-auth-buttons .btn {
     width: 100%;
     justify-content: center;
+    padding: 14px 24px;
+    font-size: 15px;
   }
   
   .header-actions .auth-buttons {
@@ -638,42 +676,107 @@ p {
   
   .nav-menu {
     position: fixed;
-    top: var(--header-height);
-    left: 0;
+    top: 0;
     right: 0;
-    background: var(--bg-primary);
+    bottom: 0;
+    width: 300px;
+    max-width: 85vw;
+    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
     flex-direction: column;
-    padding: var(--spacing-xl);
-    gap: var(--spacing-lg);
-    transform: translateY(-100%);
+    padding: 80px 24px 30px;
+    gap: 8px;
+    transform: translateX(100%);
     opacity: 0;
     visibility: hidden;
-    transition: all var(--transition-base);
-    border-bottom: 1px solid var(--border-light);
-    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow-y: auto;
   }
   
   .nav-menu.active {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
     visibility: visible;
+  }
+  
+  .nav-menu::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 150px;
+    background: radial-gradient(ellipse at top right, rgba(255, 215, 0, 0.08), transparent 70%);
+    pointer-events: none;
   }
   
   .nav-list {
     flex-direction: column;
     width: 100%;
+    gap: 4px;
+  }
+  
+  .nav-list > li {
+    width: 100%;
   }
   
   .nav-link {
     width: 100%;
-    text-align: center;
-    padding: var(--spacing-md);
+    text-align: left;
+    padding: 16px 20px;
+    font-size: 16px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+  }
+  
+  .nav-link:hover {
+    background: rgba(255, 215, 0, 0.1);
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+  
+  .nav-link.active {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+    color: var(--accent);
+  }
+  
+  .nav-dropdown {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+    min-width: auto;
+  }
+  
+  .nav-dropdown .nav-link {
+    padding-left: 40px;
+    font-size: 14px;
+  }
+  
+  .nav-dropdown .nav-link::before {
+    content: '•';
+    margin-right: 8px;
+    color: var(--accent);
+  }
+  
+  .has-dropdown > .nav-link::after {
+    display: inline-block;
+    margin-left: 8px;
+    transition: transform 0.2s;
+  }
+  
+  .has-dropdown.active > .nav-link::after {
+    transform: rotate(180deg);
   }
   
   .auth-buttons {
     flex-direction: column;
     width: 100%;
-    gap: 10px;
+    gap: 12px;
   }
   
   .auth-buttons .btn {

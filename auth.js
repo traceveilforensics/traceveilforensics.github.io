@@ -572,6 +572,17 @@ function clearNotifications() {
     localStorage.setItem(ADMIN_NOTIFICATIONS_KEY, '[]');
 }
 
+function addNotification(notification) {
+    const notifications = JSON.parse(localStorage.getItem(ADMIN_NOTIFICATIONS_KEY) || '[]');
+    notifications.unshift({
+        id: Date.now(),
+        ...notification,
+        timestamp: new Date().toISOString(),
+        read: false
+    });
+    localStorage.setItem(ADMIN_NOTIFICATIONS_KEY, JSON.stringify(notifications.slice(0, 50)));
+}
+
 // ============ CUSTOMER MANAGEMENT ============
 function addCustomer(customerData) {
     const customers = getCustomers();
@@ -677,6 +688,7 @@ if (typeof window !== 'undefined') {
         getAdminNotifications,
         markNotificationRead,
         clearNotifications,
+        addNotification,
         getRegisteredUsers
     };
 }

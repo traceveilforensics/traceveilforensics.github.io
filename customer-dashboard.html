@@ -71,6 +71,10 @@
             border-right: 1px solid rgba(255,215,0,0.05);
         }
 
+        .sidebar-close-mobile {
+            display: none;
+        }
+
         .sidebar::before {
             content: '';
             position: absolute;
@@ -670,14 +674,45 @@
             font-size: 14px;
         }
 
+        /* Mobile Overlay */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
         @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+
             .sidebar {
                 transform: translateX(-100%);
-                z-index: 9999;
+                z-index: 1000;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                width: var(--sidebar-width);
             }
 
             .sidebar.active {
                 transform: translateX(0);
+            }
+
+            .sidebar.active + .sidebar-overlay {
+                display: block;
+                opacity: 1;
             }
 
             .main-content {
@@ -685,30 +720,78 @@
                 width: 100%;
             }
 
+            /* Modern Mobile Menu Button */
             .mobile-menu-btn {
                 display: flex !important;
                 align-items: center;
                 justify-content: center;
-                width: 40px;
-                height: 40px;
-                background: var(--accent);
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, var(--accent) 0%, #ffc107 100%);
                 color: #0A1628;
                 border: none;
-                border-radius: 8px;
+                border-radius: 12px;
                 cursor: pointer;
                 font-size: 18px;
-                margin-right: 15px;
-                float: left;
+                margin-right: 12px;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+                transition: all 0.3s ease;
             }
 
+            .mobile-menu-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+            }
+
+            .mobile-menu-btn:active {
+                transform: scale(0.95);
+            }
+
+            /* Mobile Header */
             .page-header {
                 display: flex !important;
                 flex-direction: row !important;
                 align-items: center !important;
+                padding: 16px 20px !important;
+                background: linear-gradient(180deg, rgba(13,21,37,0.98) 0%, rgba(10,15,26,0.99) 100%) !important;
+                backdrop-filter: blur(20px);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+                border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+            }
+
+            .page-header > div:first-child {
+                display: flex;
+                align-items: center;
+                flex: 1;
             }
 
             .page-title {
                 display: inline-block;
+                font-size: 20px !important;
+            }
+
+            .welcome-text {
+                display: none;
+            }
+
+            .header-right {
+                display: none !important;
+            }
+
+            .header-right.mobile-visible {
+                display: flex !important;
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, var(--primary), var(--secondary));
+                padding: 12px 20px;
+                border-radius: 50px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+                gap: 10px;
+                z-index: 101;
             }
 
             .profile-section {
@@ -719,20 +802,87 @@
                 grid-template-columns: 1fr 1fr;
             }
 
-            .page-header {
-                flex-direction: column;
-                gap: 15px;
-                align-items: flex-start;
-                padding: 20px;
-            }
-
-            .header-right {
-                width: 100%;
-                flex-wrap: wrap;
-            }
-
             .page-content {
                 padding: 20px;
+            }
+
+            /* Mobile Navigation Items */
+            .nav-item {
+                padding: 16px 18px;
+                font-size: 15px;
+            }
+
+            .nav-item i {
+                width: 24px;
+                font-size: 18px;
+            }
+
+            /* Mobile Sidebar Header */
+            .sidebar-header {
+                padding: 20px;
+            }
+
+            .sidebar-header img {
+                height: 32px;
+            }
+
+            .sidebar-header a {
+                font-size: 12px;
+                margin-top: 8px;
+            }
+
+            /* Sidebar Close Button */
+            .sidebar-close-mobile {
+                display: flex;
+                justify-content: flex-end;
+                padding: 16px 20px 0;
+            }
+
+            .sidebar-close-mobile button {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 18px;
+                transition: all 0.2s ease;
+            }
+
+            .sidebar-close-mobile button:hover {
+                background: rgba(255,255,255,0.2);
+                transform: rotate(90deg);
+            }
+
+            .sidebar-nav {
+                padding: 15px 12px;
+            }
+
+            .nav-section {
+                margin-bottom: 20px;
+            }
+
+            .nav-section-title {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+
+        /* Extra small devices */
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-menu-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .page-title {
+                font-size: 18px !important;
             }
         }
     </style>
@@ -743,6 +893,9 @@
             <div class="sidebar-header">
                 <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics">
                 <a href="index.html"><i class="fas fa-home"></i> Back to Website</a>
+            </div>
+            <div class="sidebar-close-mobile">
+                <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
@@ -777,6 +930,7 @@
                 </div>
             </nav>
         </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <main class="main-content">
             <div class="page-header">
@@ -848,18 +1002,42 @@
             });
 
             document.getElementById('logoutBtn').addEventListener('click', logout);
-            document.getElementById('mobileMenuBtn').addEventListener('click', () => {
-                document.getElementById('sidebar').classList.toggle('active');
-            });
+            
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+            }
+
+            if (closeSidebarBtn) {
+                closeSidebarBtn.addEventListener('click', closeSidebar);
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
             
             document.addEventListener('click', (e) => {
-                const sidebar = document.getElementById('sidebar');
-                const menuBtn = document.getElementById('mobileMenuBtn');
                 if (window.innerWidth <= 1024 && 
                     sidebar.classList.contains('active') && 
                     !sidebar.contains(e.target) && 
-                    !menuBtn.contains(e.target)) {
-                    sidebar.classList.remove('active');
+                    !mobileMenuBtn.contains(e.target)) {
+                    closeSidebar();
                 }
             });
         }

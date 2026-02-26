@@ -1303,6 +1303,167 @@
         .hidden {
             display: none !important;
         }
+
+        /* Admin Mobile Styles */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar-close-mobile {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            :root {
+                --sidebar-width: 280px;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+                z-index: 1000;
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                width: var(--sidebar-width);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .page-header {
+                padding: 16px 20px !important;
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+
+            .page-header > div:first-child {
+                display: flex;
+                align-items: center;
+                flex: 1;
+            }
+
+            .page-title {
+                font-size: 20px !important;
+            }
+
+            .mobile-menu-btn {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                background: linear-gradient(135deg, var(--accent) 0%, #ffc107 100%);
+                color: #0A1628;
+                border: none;
+                border-radius: 12px;
+                cursor: pointer;
+                font-size: 18px;
+                margin-right: 12px;
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+                transition: all 0.3s ease;
+            }
+
+            .mobile-menu-btn:hover {
+                transform: scale(1.05);
+            }
+
+            .mobile-menu-btn:active {
+                transform: scale(0.95);
+            }
+
+            .header-right {
+                display: none !important;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .page-content {
+                padding: 20px;
+            }
+
+            .sidebar-close-mobile {
+                display: flex;
+                justify-content: flex-end;
+                padding: 16px 20px 0;
+            }
+
+            .sidebar-close-mobile button {
+                width: 36px;
+                height: 36px;
+                border: none;
+                background: rgba(255,255,255,0.1);
+                color: white;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 18px;
+                transition: all 0.2s ease;
+            }
+
+            .sidebar-close-mobile button:hover {
+                background: rgba(255,255,255,0.2);
+                transform: rotate(90deg);
+            }
+
+            .sidebar-header {
+                padding: 20px;
+            }
+
+            .sidebar-header .logo img {
+                height: 32px;
+            }
+
+            .sidebar-nav {
+                padding: 15px 12px;
+            }
+
+            .nav-item {
+                padding: 14px 16px;
+            }
+
+            .nav-section {
+                margin-bottom: 16px;
+            }
+
+            .nav-section-title {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 18px !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1314,6 +1475,9 @@
                     <img src="LOGO_NAME_optimized.png" alt="Trace Veil">
                     <span>Admin</span>
                 </a>
+            </div>
+            <div class="sidebar-close-mobile">
+                <button id="closeSidebarBtn"><i class="fas fa-times"></i></button>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
@@ -1375,11 +1539,15 @@
                 </a>
             </nav>
         </aside>
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <!-- Main Content -->
         <main class="main-content">
             <header class="header">
                 <div class="header-left">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
                     <h1 class="page-title" id="pageTitle">Dashboard</h1>
                 </div>
                 <div class="header-right">
@@ -1472,10 +1640,44 @@
                 item.addEventListener('click', (e) => {
                     e.preventDefault();
                     showPage(item.dataset.page);
+                    // Close mobile menu after navigation
+                    if (window.innerWidth <= 1024) {
+                        closeSidebar();
+                    }
                 });
             });
 
             document.getElementById('logoutBtn').addEventListener('click', logout);
+
+            // Mobile menu toggle
+            const sidebar = document.getElementById('sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+            function toggleSidebar() {
+                sidebar.classList.toggle('active');
+                sidebarOverlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                sidebarOverlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', toggleSidebar);
+            }
+
+            if (closeSidebarBtn) {
+                closeSidebarBtn.addEventListener('click', closeSidebar);
+            }
+
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
         }
 
         function toggleUserDropdown() {
@@ -3380,6 +3582,29 @@
                     </div>
                 </div>
 
+                <!-- Change Password -->
+                <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 30px;">
+                    <h3 style="color: #ffffff; margin-bottom: 20px;"><i class="fas fa-lock" style="color: #FFD700;"></i> Change Password</h3>
+                    <div id="passwordChangeMsg" style="padding: 12px; border-radius: 8px; margin-bottom: 20px; display: none;"></div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div>
+                            <label style="color: #64748b; font-size: 12px; display: block; margin-bottom: 5px;">Current Password</label>
+                            <input type="password" id="currentPassword" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9;" placeholder="Enter current password">
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 12px; display: block; margin-bottom: 5px;">New Password</label>
+                            <input type="password" id="newPassword" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9;" placeholder="Enter new password">
+                        </div>
+                        <div>
+                            <label style="color: #64748b; font-size: 12px; display: block; margin-bottom: 5px;">Confirm New Password</label>
+                            <input type="password" id="confirmPassword" style="width: 100%; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9;" placeholder="Confirm new password">
+                        </div>
+                    </div>
+                    <button onclick="changeAdminPassword()" style="background: linear-gradient(135deg, #FFD700, #ffc107); color: #0A1628; border: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 20px; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-save"></i> Update Password
+                    </button>
+                </div>
+
                 <!-- Notifications -->
                 <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 16px; padding: 24px; margin-bottom: 30px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -3537,6 +3762,86 @@
                 toast.style.animation = 'slideIn 0.3s ease reverse';
                 setTimeout(() => toast.remove(), 300);
             }, 3000);
+        }
+
+        async function changeAdminPassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const msgBox = document.getElementById('passwordChangeMsg');
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showPasswordMsg('Please fill in all fields', 'error');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                showPasswordMsg('Password must be at least 6 characters', 'error');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showPasswordMsg('New passwords do not match', 'error');
+                return;
+            }
+
+            if (currentPassword === newPassword) {
+                showPasswordMsg('New password must be different from current', 'error');
+                return;
+            }
+
+            try {
+                const customers = window.authSystem.getCustomers();
+                const adminIndex = customers.findIndex(c => c.email === currentUser.email);
+
+                if (adminIndex === -1) {
+                    showPasswordMsg('Admin user not found', 'error');
+                    return;
+                }
+
+                const storedPassword = customers[adminIndex].password;
+                
+                const crypto = window.crypto || window.msCrypto;
+                const encoder = new TextEncoder();
+                const currentHash = Array.from(crypto.subtle.digest('SHA-256', encoder.encode(currentPassword)))
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+
+                if (currentHash !== storedPassword) {
+                    showPasswordMsg('Current password is incorrect', 'error');
+                    return;
+                }
+
+                const newHash = Array.from(crypto.subtle.digest('SHA-256', encoder.encode(newPassword)))
+                    .map(b => b.toString(16).padStart(2, '0')).join('');
+
+                customers[adminIndex].password = newHash;
+                customers[adminIndex].password_changed_at = new Date().toISOString();
+                window.authSystem.saveCustomers(customers);
+
+                showPasswordMsg('Password changed successfully!', 'success');
+
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+
+                window.authSystem.addNotification({
+                    type: 'password_changed',
+                    message: `Password changed for ${currentUser.email}`
+                });
+
+            } catch (error) {
+                console.error('Password change error:', error);
+                showPasswordMsg('Error changing password. Please try again.', 'error');
+            }
+        }
+
+        function showPasswordMsg(message, type) {
+            const msgBox = document.getElementById('passwordChangeMsg');
+            msgBox.textContent = message;
+            msgBox.style.display = 'block';
+            msgBox.style.background = type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
+            msgBox.style.color = type === 'success' ? '#10b981' : '#ef4444';
+            msgBox.style.border = `1px solid ${type === 'success' ? '#10b981' : '#ef4444'}`;
         }
 
         function logout() {
