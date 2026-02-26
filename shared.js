@@ -81,30 +81,47 @@ function setupMobileMenu() {
     const navMenu = document.getElementById('navMenu');
     const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
     
+    if (!mobileMenuBtn || !navMenu) return;
+    
     function toggleMobileMenu() {
-        navMenu.classList.toggle('active');
-        mobileMenuOverlay.classList.toggle('active');
-        mobileMenuBtn.classList.toggle('active');
-        mobileMenuBtn.innerHTML = navMenu.classList.contains('active') 
-            ? '<i class="fas fa-times"></i>' 
-            : '<i class="fas fa-bars"></i>';
-        document.body.style.overflow = navMenu.classList.contains('active') ? 'hidden' : '';
+        const isActive = navMenu.classList.contains('active');
+        
+        if (isActive) {
+            // Close menu
+            navMenu.classList.remove('active');
+            if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
+            mobileMenuBtn.classList.remove('active');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
+            document.body.style.overflow = '';
+        } else {
+            // Open menu
+            navMenu.classList.add('active');
+            if (mobileMenuOverlay) mobileMenuOverlay.classList.add('active');
+            mobileMenuBtn.classList.add('active');
+            mobileMenuBtn.innerHTML = '<i class="fas fa-times"></i>';
+            document.body.style.overflow = 'hidden';
+        }
     }
 
     function closeMobileMenu() {
         navMenu.classList.remove('active');
-        mobileMenuOverlay.classList.remove('active');
+        if (mobileMenuOverlay) mobileMenuOverlay.classList.remove('active');
         mobileMenuBtn.classList.remove('active');
         mobileMenuBtn.innerHTML = '<i class="fas fa-bars"></i>';
         document.body.style.overflow = '';
     }
     
-    if (mobileMenuBtn && navMenu) {
-        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-        if (mobileMenuOverlay) {
-            mobileMenuOverlay.addEventListener('click', closeMobileMenu);
-        }
+    mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    if (mobileMenuOverlay) {
+        mobileMenuOverlay.addEventListener('click', closeMobileMenu);
     }
+    
+    // Close on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && navMenu.classList.contains('active')) {
+            closeMobileMenu();
+        }
+    });
 }
 
 function setupHeaderScroll() {
