@@ -1,5 +1,5 @@
 // Professional Authentication Manager
-// Handles JWT tokens, refresh tokens, Google OAuth, and session management
+// Handles JWT tokens, refresh tokens, and session management
 
 const AuthManager = {
     tokenKey: 'authToken',
@@ -135,36 +135,6 @@ const AuthManager = {
         }
 
         return response;
-    },
-
-    getGoogleClientId() {
-        const meta = document.querySelector('meta[name="google-signin-client_id"]');
-        return meta ? meta.content : 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-    },
-
-    async handleGoogleAuth(idToken, googleId, userData) {
-        try {
-            const response = await fetch('/api/auth-google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    idToken,
-                    googleId,
-                    ...userData
-                })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                this.setAuth(data);
-                return { success: true, user: data.user, isNewUser: data.isNewUser };
-            } else {
-                return { success: false, error: data.error };
-            }
-        } catch (error) {
-            return { success: false, error: 'Authentication failed' };
-        }
     },
 
     logout() {

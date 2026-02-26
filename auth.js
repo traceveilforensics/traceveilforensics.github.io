@@ -643,48 +643,6 @@ function getCustomerById(id) {
     return customers.find(c => c.id == id);
 }
 
-// Google OAuth handler
-async function handleGoogleAuth(idToken, googleId, userData) {
-    try {
-        const apiUrl = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' 
-            ? '/.netlify/functions/auth-google' 
-            : '/api/auth-google';
-        
-        console.log('Google Auth - API URL:', apiUrl);
-        console.log('Google Auth - Email:', userData.email);
-        
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                idToken,
-                googleId,
-                ...userData
-            })
-        });
-
-        console.log('Google Auth - Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('Google Auth - Response data:', data);
-
-        if (response.ok) {
-            // Store token and user data
-            const storage = localStorage;
-            storage.setItem('token', data.token);
-            storage.setItem('refreshToken', data.refreshToken);
-            storage.setItem('user', JSON.stringify(data.user));
-            storage.setItem('loginTime', Date.now());
-            return { success: true, user: data.user, isNewUser: data.isNewUser };
-        } else {
-            return { success: false, error: data.error || 'Authentication failed' };
-        }
-    } catch (error) {
-        console.error('Google auth error:', error);
-        return { success: false, error: 'Network error: ' + error.message };
-    }
-}
-
 // Export functions for use in HTML
 if (typeof window !== 'undefined') {
     window.authSystem = {
@@ -719,7 +677,6 @@ if (typeof window !== 'undefined') {
         getAdminNotifications,
         markNotificationRead,
         clearNotifications,
-        getRegisteredUsers,
-        handleGoogleAuth
+        getRegisteredUsers
     };
 }

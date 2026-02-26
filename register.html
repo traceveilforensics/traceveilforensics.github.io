@@ -10,8 +10,6 @@
     <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <meta name="google-signin-client_id" content="43616561005-duun25pgr5e0b3u73jg83n587l484bh2.apps.googleusercontent.com">
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         .auth-container {
             min-height: 100vh;
@@ -95,34 +93,6 @@
             cursor: not-allowed;
             transform: none;
         }
-        .google-btn {
-            width: 100%;
-            padding: 12px;
-            background: white;
-            color: #333;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s;
-        }
-        .google-btn:hover {
-            background: #f8f9fa;
-            border-color: #ccc;
-        }
-        .google-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .google-btn svg {
-            width: 18px;
-            height: 18px;
-        }
         .error-message {
             background: #fee;
             color: #c33;
@@ -142,27 +112,6 @@
             font-size: 14px;
             display: none;
             border-left: 4px solid #27ae60;
-        }
-        .divider {
-            text-align: center;
-            margin: 25px 0;
-            position: relative;
-        }
-        .divider::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            height: 1px;
-            background: #eee;
-        }
-        .divider span {
-            background: white;
-            padding: 0 15px;
-            position: relative;
-            color: #999;
-            font-size: 13px;
         }
         .login-link {
             text-align: center;
@@ -289,10 +238,6 @@
                 </p>
             </form>
 
-            <div class="divider"><span>OR</span></div>
-
-            <div id="googleBtnContainer"></div>
-
             <p class="login-link">
                 Already have an account? <a href="login.html">Sign in</a>
             </p>
@@ -318,69 +263,6 @@
             if (password.match(/\d/)) strength++;
             if (password.match(/[^a-zA-Z\d]/)) strength++;
             return strength;
-        }
-
-        // Initialize Google button on page load
-        window.onload = function() {
-            const clientId = document.querySelector('meta[name="google-signin-client_id"]').content;
-            google.accounts.id.initialize({
-                client_id: clientId,
-                callback: handleGoogleCredential,
-                auto_select: false,
-                cancel_on_tap_outside: false
-            });
-            
-            const container = document.getElementById('googleBtnContainer');
-            google.accounts.id.renderButton(container, {
-                theme: 'outline',
-                size: 'large',
-                width: '100%',
-                text: 'signup_with',
-                shape: 'rectangular',
-                logo_alignment: 'left'
-            });
-        };
-        
-        async function handleGoogleCredential(response) {
-            if (!response.credential) {
-                return;
-            }
-
-            const responsePayload = JSON.parse(atob(response.credential.split('.')[1]));
-            
-            const userData = {
-                email: responsePayload.email,
-                firstName: responsePayload.given_name,
-                lastName: responsePayload.family_name,
-                picture: responsePayload.picture
-            };
-
-            try {
-                const result = await window.authSystem.handleGoogleAuth(
-                    response.credential,
-                    responsePayload.sub,
-                    userData
-                );
-
-                if (result.success) {
-                    if (result.isNewUser) {
-                        successMessage.textContent = 'Account created with Google! Redirecting to dashboard...';
-                    } else {
-                        successMessage.textContent = 'Welcome back! Redirecting to dashboard...';
-                    }
-                    successMessage.style.display = 'block';
-                    
-                    setTimeout(() => {
-                        window.location.href = 'customer-dashboard.html';
-                    }, 1500);
-                } else {
-                    errorMessage.textContent = result.error || 'Google authentication failed';
-                    errorMessage.style.display = 'block';
-                }
-            } catch (err) {
-                errorMessage.textContent = 'An error occurred during Google authentication';
-                errorMessage.style.display = 'block';
-            }
         }
 
         document.getElementById('password').addEventListener('input', function(e) {
