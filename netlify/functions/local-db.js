@@ -1,12 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Use bundled data in function directory
 const DATA_DIR = path.join(__dirname, 'data');
-
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
 
 const files = {
   users: path.join(DATA_DIR, 'users.json'),
@@ -94,19 +89,18 @@ const defaults = {
 
 // Initialize database
 function initDB() {
-  Object.keys(files).forEach(key => {
-    if (!fs.existsSync(files[key])) {
-      fs.writeFileSync(files[key], JSON.stringify(defaults[key], null, 2));
-    }
-  });
+  // Don't create files in production - use bundled data
 }
 
 // Read data
 function read(key) {
   try {
-    return JSON.parse(fs.readFileSync(files[key], 'utf8'));
+    if (fs.existsSync(files[key])) {
+      return JSON.parse(fs.readFileSync(files[key], 'utf8'));
+    }
+    return defaults[key] || [];
   } catch (e) {
-    return [];
+    return defaults[key] || [];
   }
 }
 
