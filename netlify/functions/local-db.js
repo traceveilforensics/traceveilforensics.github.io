@@ -1,19 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const bcrypt = require('bcryptjs');
 
 // Use bundled data in function directory
 const DATA_DIR = path.join(__dirname, 'data');
 
-console.log('Data directory:', DATA_DIR);
-console.log('Directory exists:', fs.existsSync(DATA_DIR));
-
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
-
-console.log('Data directory:', DATA_DIR);
-console.log('Files in parent:', fs.readdirSync(path.join(__dirname, '..')));
 
 const files = {
   users: path.join(DATA_DIR, 'users.json'),

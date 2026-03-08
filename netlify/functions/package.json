@@ -1,0 +1,10 @@
+{
+  "name": "traceveil-functions",
+  "version": "1.0.0",
+  "description": "Netlify functions for Trace Veil Forensics",
+  "main": "index.js",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

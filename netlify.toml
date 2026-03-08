@@ -7,7 +7,6 @@
 
 [functions]
   directory = "netlify/functions"
-  included_files = ["data/*"]
 
 [[redirects]]
   from = "/api/*"
