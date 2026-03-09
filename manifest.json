@@ -3,10 +3,11 @@
   "short_name": "Trace Veil Forensics",
   "description": "Professional cybersecurity consulting services",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#0A1628",
   "theme_color": "#0A1628",
   "orientation": "portrait-primary",
+  "scope": "/",
   "icons": [
     {
       "src": "favicon.png",
