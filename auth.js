@@ -65,16 +65,53 @@ function initializeDefaultData() {
     // Default pricing plans
     if (!localStorage.getItem(PRICING_KEY)) {
         const defaultPricing = [
-            { id: 1, service_id: 1, name: 'Basic', price: 15000, billing_cycle: 'one_time', description: 'Entry-level security assessment', features: ['Vulnerability Scan', 'Basic Report', 'Email Support'], active: true },
-            { id: 2, service_id: 1, name: 'Professional', price: 35000, billing_cycle: 'one_time', description: 'Comprehensive security audit', features: ['Full Assessment', 'Detailed Report', 'Phone Support', 'Remediation Plan'], active: true },
-            { id: 3, service_id: 1, name: 'Enterprise', price: 75000, billing_cycle: 'one_time', description: 'Enterprise security solution', features: ['Complete Audit', 'Executive Report', '24/7 Support', 'On-site Visit', 'Yearly Review'], active: true },
-            { id: 4, service_id: 2, name: 'Starter', price: 5000, billing_cycle: 'monthly', description: 'Monthly vulnerability scanning', features: ['Weekly Scans', 'Email Alerts', 'Basic Report'], active: true },
-            { id: 5, service_id: 2, name: 'Professional', price: 15000, billing_cycle: 'monthly', description: 'Advanced scanning solution', features: ['Daily Scans', 'Real-time Alerts', 'Detailed Report', 'Priority Support'], active: true },
-            { id: 6, service_id: 3, name: 'Standard', price: 25000, billing_cycle: 'one_time', description: 'Incident response package', features: ['24/7 Response', 'Remote Support', 'Initial Analysis'], active: true },
-            { id: 7, service_id: 3, name: 'Premium', price: 50000, billing_cycle: 'one_time', description: 'Full incident response', features: ['24/7 Response', 'On-site Support', 'Full Investigation', 'Legal Support'], active: true },
-            { id: 8, service_id: 4, name: 'Basic', price: 20000, billing_cycle: 'one_time', description: 'Standard forensics analysis', features: ['Evidence Collection', 'Basic Report', '30-day Retention'], active: true },
-            { id: 9, service_id: 5, name: 'Basic', price: 10000, billing_cycle: 'monthly', description: 'Basic IT support', features: ['Remote Support', '9-5 Hours', 'Basic Maintenance'], active: true },
-            { id: 10, service_id: 6, name: 'Workshop', price: 15000, billing_cycle: 'one_time', description: 'Security awareness workshop', features: ['2-hour Session', 'Up to 20 Staff', 'Materials Included'], active: true }
+            // Security Assessments (KES 500 – 5,000)
+            { id: 1, service_id: 1, name: 'Quick Security Health Check', description: 'Basic system and account security evaluation', price: 500, billing_cycle: 'one_time', features: ['Account & credential check', 'Basic security posture review', 'Quick summary report'], active: true },
+            { id: 2, service_id: 1, name: 'Website Security Assessment', description: 'Review website configuration, admin access, and security settings', price: 2000, billing_cycle: 'one_time', features: ['Website configuration review', 'Admin access audit', 'Security settings evaluation', 'Recommendations report'], active: true },
+            { id: 3, service_id: 1, name: 'Small Business Security Audit', description: 'Evaluate devices, access controls, and operational security', price: 3500, billing_cycle: 'one_time', features: ['Device evaluation', 'Access control review', 'Operational security assessment', 'Detailed audit report'], active: true },
+            { id: 4, service_id: 1, name: 'Network Security Assessment', description: 'Review router configuration, WiFi protection, and firewall rules', price: 4000, billing_cycle: 'one_time', features: ['Router configuration review', 'WiFi protection audit', 'Firewall rules analysis', 'Network security report'], active: true },
+            { id: 5, service_id: 1, name: 'Access Control & Password Audit', description: 'Evaluate authentication practices and account protection', price: 1500, billing_cycle: 'one_time', features: ['Authentication practices review', 'Password policy evaluation', 'Account protection assessment', 'Security recommendations'], active: true },
+            { id: 6, service_id: 1, name: 'Device Security Assessment', description: 'Review laptops, desktops, and workstations for security risks', price: 1000, billing_cycle: 'one_time', features: ['Device security review', 'Workstation assessment', 'Risk identification', 'Security recommendations'], active: true },
+            
+            // Vulnerability Scanning (KES 1,000 – 6,000)
+            { id: 7, service_id: 2, name: 'Quick Vulnerability Scan', description: 'Automated scan to detect common vulnerabilities', price: 1000, billing_cycle: 'one_time', features: ['Automated vulnerability scanning', 'Common vulnerabilities detection', 'Basic findings summary'], active: true },
+            { id: 8, service_id: 2, name: 'Website Vulnerability Scan', description: 'Detect web application vulnerabilities and misconfigurations', price: 4500, billing_cycle: 'one_time', features: ['Web application scanning', 'OWASP Top 10 check', 'Vulnerability report', 'Risk prioritization'], active: true },
+            { id: 9, service_id: 2, name: 'Network Vulnerability Scan', description: 'Identify exposed services and insecure network configurations', price: 4000, billing_cycle: 'one_time', features: ['Network port scanning', 'Exposed service detection', 'Risk prioritized report', 'Remediation guidance'], active: true },
+            { id: 10, service_id: 2, name: 'Server Security Scan', description: 'Detect outdated software and server misconfigurations', price: 3500, billing_cycle: 'one_time', features: ['Software version check', 'Server configuration review', 'Security recommendations', 'Compliance report'], active: true },
+            { id: 11, service_id: 2, name: 'CMS & Plugin Security Scan', description: 'Scan WordPress or CMS plugins for known vulnerabilities', price: 2500, billing_cycle: 'one_time', features: ['CMS core and plugin scanning', 'Known vulnerability detection', 'Patch recommendations', 'Security hardening tips'], active: true },
+            { id: 12, service_id: 2, name: 'Security Misconfiguration Scan', description: 'Identify risky system or software configurations', price: 2000, billing_cycle: 'one_time', features: ['System configuration review', 'Risk scoring', 'Configuration guidelines', 'Remediation suggestions'], active: true },
+            
+            // Incident Response (KES 1,500 – 8,000)
+            { id: 13, service_id: 3, name: 'Malware Removal & Cleanup', description: 'Remove viruses, spyware, and malicious software', price: 2500, billing_cycle: 'one_time', features: ['Malware detection and removal', 'System cleanup', 'Post-cleanup verification', 'Threat containment'], active: true },
+            { id: 14, service_id: 3, name: 'Account Breach Recovery', description: 'Assist in recovering compromised email or online accounts', price: 2000, billing_cycle: 'one_time', features: ['Credential reset assistance', 'Session termination', 'Security reinforcement', 'Account recovery support'], active: true },
+            { id: 15, service_id: 3, name: 'Website Hack Recovery', description: 'Remove malicious code and restore website functionality', price: 8000, billing_cycle: 'one_time', features: ['Malicious code removal', 'Website restoration', 'Security hardening', 'Post-recovery verification'], active: true },
+            { id: 16, service_id: 3, name: 'System Compromise Investigation', description: 'Analyze compromised devices to identify attack sources', price: 6000, billing_cycle: 'one_time', features: ['Forensic analysis', 'Attack vector identification', 'Evidence collection', 'Mitigation report'], active: true },
+            { id: 17, service_id: 3, name: 'Emergency Security Assistance', description: 'Immediate support for suspected cyber incidents', price: 3500, billing_cycle: 'one_time', features: ['24/7 incident response', 'Initial assessment', 'Containment actions', 'Rapid communication'], active: true },
+            { id: 18, service_id: 3, name: 'Post-Incident Security Hardening', description: 'Strengthen systems after an attack to prevent recurrence', price: 5000, billing_cycle: 'one_time', features: ['Security audit', 'Vulnerability patching', 'Configuration hardening', 'Training recommendations'], active: true },
+            
+            // Digital Forensics (KES 1,500 – 7,000)
+            { id: 19, service_id: 4, name: 'Deleted File Recovery', description: 'Recover lost or accidentally deleted data', price: 2000, billing_cycle: 'one_time', features: ['File carving and recovery', 'Recovery from HDD/SSD/USB', 'Recovery report', 'Legal evidentiary support'], active: true },
+            { id: 20, service_id: 4, name: 'Storage Device Analysis', description: 'Investigate USB drives, external disks, or storage media', price: 3500, billing_cycle: 'one_time', features: ['Storage media analysis', 'Data extraction', 'Forensic imaging', 'Evidence documentation'], active: true },
+            { id: 21, service_id: 4, name: 'Device Activity Investigation', description: 'Analyze computer usage and suspicious behavior', price: 4500, billing_cycle: 'one_time', features: ['Timeline and artifact analysis', 'User activity reconstruction', 'Process investigation', 'Findings report'], active: true },
+            { id: 22, service_id: 4, name: 'Suspicious File Analysis', description: 'Examine unknown files or potential malware samples', price: 3000, billing_cycle: 'one_time', features: ['Static and dynamic analysis', 'Malware signature detection', 'Behavioral analysis', 'Technical report'], active: true },
+            { id: 23, service_id: 4, name: 'Digital Evidence Collection', description: 'Extract and preserve digital evidence for investigations', price: 7000, billing_cycle: 'one_time', features: ['Forensic imaging', 'Chain of custody', 'Evidence preservation', 'Court-admissible documentation'], active: true },
+            { id: 24, service_id: 4, name: 'Incident Timeline Reconstruction', description: 'Reconstruct events leading to a cyber incident', price: 5500, billing_cycle: 'one_time', features: ['Event timeline creation', 'Root cause analysis', 'Chronological reconstruction', 'Detailed incident report'], active: true },
+            
+            // IT Solutions (KES 300 – 3,000)
+            { id: 25, service_id: 5, name: 'Quick IT Services', description: 'OS installation, Office installation, app installation', price: 500, billing_cycle: 'one_time', features: ['Fresh OS install', 'Software setup', 'Basic configuration', 'Installation verification'], active: true },
+            { id: 26, service_id: 5, name: 'System Optimization', description: 'Improve performance and clean unnecessary processes', price: 1500, billing_cycle: 'one_time', features: ['Performance tuning', 'Startup optimization', 'Process cleanup', 'System diagnostics'], active: true },
+            { id: 27, service_id: 5, name: 'Security Setup', description: 'Install antivirus, configure firewall, enable system protection', price: 2000, billing_cycle: 'one_time', features: ['Antivirus installation', 'Firewall configuration', 'System hardening', 'Security monitoring setup'], active: true },
+            { id: 28, service_id: 5, name: 'Network Setup', description: 'Configure routers, WiFi security, and network connectivity', price: 2500, billing_cycle: 'one_time', features: ['Network topology design', 'WiFi security configuration', 'IP addressing setup', 'Connectivity testing'], active: true },
+            { id: 29, service_id: 5, name: 'Backup & Data Protection', description: 'Setup automated backups and cloud storage solutions', price: 3000, billing_cycle: 'one_time', features: ['Backup software config', 'Cloud sync setup', 'Recovery test', 'Encryption setup'], active: true },
+            { id: 30, service_id: 5, name: 'Software & System Maintenance', description: 'Updates, driver installation, and system troubleshooting', price: 800, billing_cycle: 'one_time', features: ['OS updates', 'Driver installation', 'Software troubleshooting', 'System monitoring'], active: true },
+            
+            // Training & Awareness (KES 500 – 4,000)
+            { id: 31, service_id: 6, name: 'Basic Cybersecurity Awareness', description: 'Online safety fundamentals', price: 500, billing_cycle: 'one_time', features: ['Security concept introduction', 'Threat awareness', 'Safe browsing practices', 'Reporting procedures'], active: true },
+            { id: 32, service_id: 6, name: 'Phishing Awareness Training', description: 'Detect and avoid phishing attacks', price: 2000, billing_cycle: 'one_time', features: ['Phishing detection training', 'Email analysis skills', 'Reporting procedures', 'Real-world examples'], active: true },
+            { id: 33, service_id: 6, name: 'Password Security Training', description: 'Password management and multi-factor authentication', price: 1500, billing_cycle: 'one_time', features: ['Password best practices', 'MFA setup guide', 'Credential protection', 'Password manager introduction'], active: true },
+            { id: 34, service_id: 6, name: 'Safe Internet Usage Training', description: 'Secure browsing and online privacy practices', price: 1200, billing_cycle: 'one_time', features: ['Browser security settings', 'Privacy configuration', 'Tracking protection', 'Secure communication'], active: true },
+            { id: 35, service_id: 6, name: 'Employee Security Awareness', description: 'Cyber hygiene training for staff', price: 3000, billing_cycle: 'one_time', features: ['Interactive workshop', 'Phishing simulations', 'Best practice drills', 'Certification of completion'], active: true },
+            { id: 36, service_id: 6, name: 'Small Business Security Workshop', description: 'Practical security practices for SMEs', price: 4000, billing_cycle: 'one_time', features: ['Customized security strategy', 'Budget-friendly solutions', 'Implementation roadmap', 'Ongoing support options'], active: true }
         ];
         localStorage.setItem(PRICING_KEY, JSON.stringify(defaultPricing));
     }
@@ -301,6 +338,10 @@ function getPricing() {
 // Save pricing
 function savePricing(pricing) {
     localStorage.setItem(PRICING_KEY, JSON.stringify(pricing));
+    
+    // Dispatch custom event to notify UI of pricing changes
+    const event = new CustomEvent('pricingUpdated', { detail: pricing });
+    window.dispatchEvent(event);
 }
 
 // Get all invoices

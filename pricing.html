@@ -646,33 +646,33 @@
             'yearly': '/year'
         };
 
-        async function loadPricing() {
-            try {
-                // Load from localStorage via auth.js
-                const pricing = window.authSystem ? window.authSystem.getPricing() : [];
-                const services = window.authSystem ? window.authSystem.getServices() : [];
-                
-                // Add service info to plans
-                const plans = pricing.filter(p => p.active).map(plan => {
-                    const service = services.find(s => s.id === plan.service_id);
-                    return {
-                        ...plan,
-                        service_name: service?.name || 'Other',
-                        service_icon: service?.icon || 'fa-cog'
-                    };
-                });
-                
-                renderPricing(plans);
-            } catch (error) {
-                console.error('Error loading pricing:', error);
-                document.getElementById('pricingContent').innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <p>Unable to load pricing. Please try again later.</p>
-                    </div>
-                `;
-            }
-        }
+         async function loadPricing() {
+             try {
+                 // Load pricing from admin panel localStorage via auth.js
+                 const pricing = window.authSystem ? window.authSystem.getPricing() : [];
+                 const services = window.authSystem ? window.authSystem.getServices() : [];
+                 
+                 // Add service info to plans
+                 const plans = pricing.filter(p => p.active !== false).map(plan => {
+                     const service = services.find(s => s.id === parseInt(plan.service_id) || s.id === plan.service_id);
+                     return {
+                         ...plan,
+                         service_name: service?.name || 'Other Services',
+                         service_icon: service?.icon || 'fa-cog'
+                     };
+                 });
+                 
+                 renderPricing(plans);
+             } catch (error) {
+                 console.error('Error loading pricing:', error);
+                 document.getElementById('pricingContent').innerHTML = `
+                     <div class="empty-state">
+                         <i class="fas fa-exclamation-triangle"></i>
+                         <p>Unable to load pricing. Please try again later.</p>
+                     </div>
+                 `;
+             }
+         }
 
         function renderPricing(plans) {
             if (plans.length === 0) {
@@ -775,6 +775,11 @@
             if (typeof setupMobileMenu === 'function') setupMobileMenu();
             if (typeof setupHeaderScroll === 'function') setupHeaderScroll();
             loadPricing();
+            
+            // Listen for pricing updates from admin panel
+            window.addEventListener('pricingUpdated', function() {
+                loadPricing();
+            });
         });
     </script>
 </body>
