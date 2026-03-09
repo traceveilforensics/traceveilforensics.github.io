@@ -1552,6 +1552,9 @@
                     <h1 class="page-title" id="pageTitle">Dashboard</h1>
                 </div>
                 <div class="header-right">
+                    <button class="header-btn" onclick="syncCloud()" title="Sync from Cloud">
+                        <i class="fas fa-cloud-download-alt"></i>
+                    </button>
                     <button class="header-btn" onclick="refreshData()">
                         <i class="fas fa-sync-alt"></i>
                     </button>
@@ -1704,6 +1707,28 @@
             showToast('Refreshing data...', 'success');
             loadDashboard();
             updateBadges();
+        }
+
+        async function syncCloud() {
+            if (!window.authSystem.SUPABASE_ENABLED) {
+                showToast('Cloud sync not configured', 'warning');
+                return;
+            }
+            
+            const btn = event.target.closest('button');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            
+            const success = await window.authSystem.syncFromCloud();
+            
+            btn.innerHTML = originalIcon;
+            
+            if (success) {
+                showToast('Synced from cloud! Reloading...', 'success');
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast('No cloud data or sync failed', 'warning');
+            }
         }
 
         function showPage(page) {

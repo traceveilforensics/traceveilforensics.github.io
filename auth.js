@@ -59,6 +59,30 @@ async function backgroundSync() {
     }
 }
 
+// Force sync from cloud and reload page
+async function syncFromCloud() {
+    if (!SUPABASE_ENABLED || !supabaseClient) return false;
+    
+    try {
+        // Sync services
+        const { data: svcData } = await supabaseClient.from('sync_data').select('data').eq('id', 'services').single();
+        if (svcData && svcData.data) {
+            localStorage.setItem(SERVICES_KEY, JSON.stringify(svcData.data));
+        }
+        
+        // Sync pricing
+        const { data: prcData } = await supabaseClient.from('sync_data').select('data').eq('id', 'pricing').single();
+        if (prcData && prcData.data) {
+            localStorage.setItem(PRICING_KEY, JSON.stringify(prcData.data));
+        }
+        
+        return true;
+    } catch(e) { 
+        console.log('Sync from cloud error:', e);
+        return false;
+    }
+}
+
 // Initialize default customers
 function initializeDefaultCustomers() {
     let customers = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
@@ -378,6 +402,11 @@ function saveServices(services) {
 }
 
 // Get all pricing plans
+async function getPricing() {
+    // Try cloud first
+    if (SUPABASE_ENABLED && supabaseClient) {
+        try {
+// Get all pricing plans
 function getPricing() {
     let data = localStorage.getItem(PRICING_KEY);
     if (!data) {
@@ -387,9 +416,6 @@ function getPricing() {
     try {
         return JSON.parse(data || '[]');
     } catch (e) {
-        return [];
-    }
-}
         return [];
     }
 }
@@ -792,6 +818,7 @@ if (typeof window !== 'undefined') {
         addNotification,
         getRegisteredUsers,
         backgroundSync,
+        syncFromCloud,
         SUPABASE_ENABLED
     };
 }
