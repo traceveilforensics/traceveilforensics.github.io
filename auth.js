@@ -7,6 +7,58 @@ const PRICING_KEY = 'admin_pricing';
 const INVOICES_KEY = 'admin_invoices';
 const SERVICE_REQUESTS_KEY = 'admin_service_requests';
 
+// Supabase configuration - Replace with your values
+const SUPABASE_URL = 'https://your-project.supabase.co';
+const SUPABASE_ANON_KEY = 'your-anon-key';
+const SUPABASE_ENABLED = SUPABASE_URL !== 'https://your-project.supabase.co';
+
+let supabaseClient = null;
+if (SUPABASE_ENABLED) {
+    try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch(e) { console.log('Supabase init failed:', e); }
+}
+
+// Sync data to Supabase
+async function syncToSupabase(table, data) {
+    if (!SUPABASE_ENABLED || !supabaseClient) return;
+    try {
+        await supabaseClient.from(table).upsert({ id: 'master', data: data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    } catch(e) { console.log('Sync error:', e); }
+}
+
+// Load data from Supabase (background sync)
+async function loadFromSupabase(table) {
+    if (!SUPABASE_ENABLED || !supabaseClient) return null;
+    try {
+        const { data } = await supabaseClient.from(table).select('data,updated_at').eq('id', 'master').single();
+        return data ? data : null;
+    } catch(e) { return null; }
+}
+
+// Background sync - call after page load
+async function backgroundSync() {
+    if (!SUPABASE_ENABLED) return;
+    
+    const cloudServices = await loadFromSupabase('services');
+    if (cloudServices && cloudServices.data) {
+        const localServices = JSON.parse(localStorage.getItem(SERVICES_KEY) || '[]');
+        if (localServices.length === 0 || new Date(cloudServices.updated_at) > new Date(localStorage.getItem('services_sync_time') || '2020-01-01')) {
+            localStorage.setItem(SERVICES_KEY, JSON.stringify(cloudServices.data));
+            localStorage.setItem('services_sync_time', cloudServices.updated_at);
+        }
+    }
+    
+    const cloudPricing = await loadFromSupabase('pricing');
+    if (cloudPricing && cloudPricing.data) {
+        const localPricing = JSON.parse(localStorage.getItem(PRICING_KEY) || '[]');
+        if (localPricing.length === 0 || new Date(cloudPricing.updated_at) > new Date(localStorage.getItem('pricing_sync_time') || '2020-01-01')) {
+            localStorage.setItem(PRICING_KEY, JSON.stringify(cloudPricing.data));
+            localStorage.setItem('pricing_sync_time', cloudPricing.updated_at);
+        }
+    }
+}
+
 // Initialize default customers
 function initializeDefaultCustomers() {
     let customers = JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]');
@@ -143,6 +195,9 @@ function initializeDefaultData() {
 
 // Initialize on load
 initializeDefaultData();
+if (typeof window !== 'undefined') {
+    setTimeout(backgroundSync, 2000);
+}
 
 // Get registered users from localStorage
 function getRegisteredUsers() {
@@ -319,6 +374,7 @@ function getServices() {
 // Save services
 function saveServices(services) {
     localStorage.setItem(SERVICES_KEY, JSON.stringify(services));
+    syncToSupabase('services', services);
 }
 
 // Get all pricing plans
@@ -334,10 +390,14 @@ function getPricing() {
         return [];
     }
 }
+        return [];
+    }
+}
 
 // Save pricing
 function savePricing(pricing) {
     localStorage.setItem(PRICING_KEY, JSON.stringify(pricing));
+    syncToSupabase('pricing', pricing);
     
     // Dispatch custom event to notify UI of pricing changes
     const event = new CustomEvent('pricingUpdated', { detail: pricing });
@@ -730,6 +790,8 @@ if (typeof window !== 'undefined') {
         markNotificationRead,
         clearNotifications,
         addNotification,
-        getRegisteredUsers
+        getRegisteredUsers,
+        backgroundSync,
+        SUPABASE_ENABLED
     };
 }
