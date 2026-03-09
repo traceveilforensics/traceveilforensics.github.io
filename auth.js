@@ -7,10 +7,10 @@ const PRICING_KEY = 'admin_pricing';
 const INVOICES_KEY = 'admin_invoices';
 const SERVICE_REQUESTS_KEY = 'admin_service_requests';
 
-// Supabase configuration - Replace with your values
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
-const SUPABASE_ENABLED = SUPABASE_URL !== 'https://your-project.supabase.co';
+// Supabase configuration
+const SUPABASE_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_pZC1O2ysKyCLMtjxdr3XWA_ffZiTCAB';
+const SUPABASE_ENABLED = true;
 
 let supabaseClient = null;
 if (SUPABASE_ENABLED) {
