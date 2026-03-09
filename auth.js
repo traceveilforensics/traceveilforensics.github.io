@@ -20,18 +20,18 @@ if (SUPABASE_ENABLED) {
 }
 
 // Sync data to Supabase
-async function syncToSupabase(table, data) {
+async function syncToSupabase(key, data) {
     if (!SUPABASE_ENABLED || !supabaseClient) return;
     try {
-        await supabaseClient.from(table).upsert({ id: 'master', data: data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+        await supabaseClient.from('sync_data').upsert({ id: key, data: data, updated_at: new Date().toISOString() }, { onConflict: 'id' });
     } catch(e) { console.log('Sync error:', e); }
 }
 
 // Load data from Supabase (background sync)
-async function loadFromSupabase(table) {
+async function loadFromSupabase(key) {
     if (!SUPABASE_ENABLED || !supabaseClient) return null;
     try {
-        const { data } = await supabaseClient.from(table).select('data,updated_at').eq('id', 'master').single();
+        const { data } = await supabaseClient.from('sync_data').select('data,updated_at').eq('id', key).single();
         return data ? data : null;
     } catch(e) { return null; }
 }
