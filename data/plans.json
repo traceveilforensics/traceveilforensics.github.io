@@ -2,175 +2,305 @@
   {
     "id": "p1",
     "service_id": "s1",
-    "name": "Basic Assessment",
-    "description": "Essential security review",
+    "name": "Quick Security Health Check",
+    "description": "Basic system and account security evaluation",
     "price": 2500,
+    "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Basic security check",
-      "Vulnerability scan",
-      "Summary report"
+      "Basic security posture review",
+      "Account & credential check",
+      "Quick summary report"
     ]
   },
   {
     "id": "p2",
     "service_id": "s1",
-    "name": "Professional Assessment",
-    "description": "Complete security audit",
-    "price": 75000,
+    "name": "Website Security Assessment",
+    "description": "Review website configuration, admin access, and security settings",
+    "price": 15000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Deep analysis",
-      "Application review",
-      "Policy review",
-      "Detailed report"
+      "Configuration & CMS review",
+      "Admin panel security audit",
+      "Basic vulnerability check",
+      "Recommendations report"
     ]
   },
   {
     "id": "p3",
-    "service_id": "s2",
-    "name": "Basic Scan",
-    "description": "Automated vulnerability scan",
-    "price": 15000,
-    "currency": "KES",
-    "billing_cycle": "one_time",
-    "features": [
-      "Auto scan",
-      "Basic report"
-    ]
-  },
-  {
-    "id": "p4",
-    "service_id": "s2",
-    "name": "Advanced Scan",
-    "description": "Full vulnerability assessment",
+    "service_id": "s1",
+    "name": "Small Business Security Audit",
+    "description": "Evaluate devices, access controls, and operational security",
     "price": 35000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Manual + auto testing",
-      "Detailed report",
-      "Risk assessment"
+      "Device & endpoint review",
+      "Access control evaluation",
+      "Policy & procedure check",
+      "Detailed audit report"
+    ]
+  },
+  {
+    "id": "p4",
+    "service_id": "s1",
+    "name": "Network Security Assessment",
+    "description": "Review router configuration, WiFi protection, and firewall rules",
+    "price": 45000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Network device configuration audit",
+      "WiFi security analysis",
+      "Firewall & port review",
+      "Risk & recommendation report"
     ]
   },
   {
     "id": "p5",
-    "service_id": "s3",
-    "name": "Basic Response",
-    "description": "Emergency incident handling",
-    "price": 50000,
+    "service_id": "s2",
+    "name": "Quick Vulnerability Scan",
+    "description": "Automated scan to detect common vulnerabilities",
+    "price": 5000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Immediate response",
-      "Containment",
-      "Basic investigation"
+      "Automated vulnerability scanning",
+      "Basic findings summary"
     ]
   },
   {
     "id": "p6",
-    "service_id": "s3",
-    "name": "Full Response",
-    "description": "Complete incident management",
-    "price": 150000,
+    "service_id": "s2",
+    "name": "Website Vulnerability Scan",
+    "description": "Detect web application vulnerabilities and misconfigurations",
+    "price": 12000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Full investigation",
-      "Forensic analysis",
-      "Recovery",
-      "Post-incident report"
+      "Web app & API scanning",
+      "OWASP Top 10 check",
+      "Detailed vulnerability report"
     ]
   },
   {
     "id": "p7",
-    "service_id": "s4",
-    "name": "Basic Forensics",
-    "description": "Standard investigation",
-    "price": 100000,
+    "service_id": "s2",
+    "name": "Network Vulnerability Scan",
+    "description": "Identify exposed services and insecure network configurations",
+    "price": 18000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Evidence collection",
-      "Basic analysis",
-      "Report"
+      "Network port & service scan",
+      "Exposed service detection",
+      "Risk prioritized report"
     ]
   },
   {
     "id": "p8",
-    "service_id": "s4",
-    "name": "Advanced Forensics",
-    "description": "Comprehensive analysis",
-    "price": 250000,
+    "service_id": "s2",
+    "name": "CMS & Plugin Security Scan",
+    "description": "Scan WordPress or CMS plugins for known vulnerabilities",
+    "price": 8000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Complete investigation",
-      "Expert testimony ready",
-      "Full documentation"
+      "CMS core & plugin scanning",
+      "Known CVE detection",
+      "Patch & update recommendations"
     ]
   },
   {
     "id": "p9",
-    "service_id": "s5",
-    "name": "Basic Support",
-    "description": "Essential IT help",
-    "price": 15000,
-    "currency": "KES",
-    "billing_cycle": "monthly",
-    "features": [
-      "Help desk",
-      "Basic monitoring"
-    ]
-  },
-  {
-    "id": "p10",
-    "service_id": "s5",
-    "name": "Enterprise Support",
-    "description": "Full IT management",
-    "price": 75000,
-    "currency": "KES",
-    "billing_cycle": "monthly",
-    "features": [
-      "24/7 support",
-      "Full monitoring",
-      "Proactive maintenance"
-    ]
-  },
-  {
-    "id": "p11",
-    "service_id": "s6",
-    "name": "Phishing Training",
-    "description": "Basic phishing awareness",
+    "service_id": "s3",
+    "name": "Malware Removal & Cleanup",
+    "description": "Remove viruses, spyware, and malicious software",
     "price": 10000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "Phishing simulation",
-      "Basic training"
+      "Malware detection & removal",
+      "System cleanup",
+      "Basic post-cleanup verification"
     ]
   },
   {
-    "id": "p12",
-    "service_id": "s6",
-    "name": "Full Security Training",
-    "description": "Complete awareness program",
+    "id": "p10",
+    "service_id": "s3",
+    "name": "Website Hack Recovery",
+    "description": "Remove malicious code and restore website functionality",
+    "price": 25000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Malicious code removal",
+      "Backup restoration",
+      "Security hardening"
+    ]
+  },
+  {
+    "id": "p11",
+    "service_id": "s3",
+    "name": "Emergency Security Assistance",
+    "description": "Immediate support for suspected cyber incidents",
     "price": 50000,
     "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
-      "All security topics",
-      "Hands-on training",
-      "Certification"
+      "Rapid response (within hours)",
+      "Containment actions",
+      "Initial incident assessment"
     ]
   },
   {
-    "id": "29b5d9d0-0d87-41c6-a2c5-08bd65ae7d32",
+    "id": "p12",
+    "service_id": "s3",
+    "name": "Full Incident Response",
+    "description": "Complete breach investigation and recovery",
+    "price": 150000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Full forensic investigation",
+      "Root cause analysis",
+      "Recovery & hardening",
+      "Detailed post-incident report"
+    ]
+  },
+  {
+    "id": "p13",
+    "service_id": "s4",
+    "name": "Deleted File Recovery",
+    "description": "Recover lost or accidentally deleted data",
+    "price": 10000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "File carving & recovery",
+      "From HDD/SSD/USB",
+      "Recovery report"
+    ]
+  },
+  {
+    "id": "p14",
+    "service_id": "s4",
+    "name": "Device Activity Investigation",
+    "description": "Analyze computer usage and suspicious behavior",
+    "price": 35000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Timeline & artifact analysis",
+      "User activity reconstruction",
+      "Findings report"
+    ]
+  },
+  {
+    "id": "p15",
+    "service_id": "s4",
+    "name": "Digital Evidence Collection",
+    "description": "Extract and preserve digital evidence for investigations",
+    "price": 80000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Forensic imaging",
+      "Chain of custody",
+      "Court-admissible preservation"
+    ]
+  },
+  {
+    "id": "p16",
+    "service_id": "s5",
+    "name": "Quick IT Services",
+    "description": "OS installation, Office installation, app installation",
+    "price": 1500,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Fresh OS install",
+      "Software setup",
+      "Basic configuration"
+    ]
+  },
+  {
+    "id": "p17",
+    "service_id": "s5",
+    "name": "Security Setup",
+    "description": "Install antivirus, configure firewall, enable system protection",
+    "price": 3500,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Antivirus & firewall setup",
+      "Endpoint protection",
+      "Basic hardening"
+    ]
+  },
+  {
+    "id": "p18",
+    "service_id": "s5",
+    "name": "Backup & Data Protection",
+    "description": "Setup automated backups and cloud storage solutions",
+    "price": 6000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Backup software config",
+      "Cloud sync setup",
+      "Recovery test"
+    ]
+  },
+  {
+    "id": "p19",
     "service_id": "s6",
-    "name": "Basic Linux",
+    "name": "Basic Cybersecurity Awareness",
+    "description": "Online safety fundamentals",
+    "price": 2000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Core online safety concepts",
+      "Self-paced or 1-hour session"
+    ]
+  },
+  {
+    "id": "p20",
+    "service_id": "s6",
+    "name": "Phishing Awareness Training",
+    "description": "Detect and avoid phishing attacks",
+    "price": 5000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Phishing simulation",
+      "Recognition & reporting training"
+    ]
+  },
+  {
+    "id": "p21",
+    "service_id": "s6",
+    "name": "Small Business Security Workshop",
+    "description": "Practical security practices for SMEs",
+    "price": 18000,
+    "currency": "KES",
+    "billing_cycle": "one_time",
+    "features": [
+      "Group training (up to 10 people)",
+      "Hands-on exercises",
+      "Customized SME focus"
+    ]
+  },
+  {
+    "id": "p22",
+    "service_id": "s6",
+    "name": "Basic Linux (Kali Fundamentals)",
     "description": "Kali Linux fundamentals",
     "price": 1000,
+    "currency": "KES",
     "billing_cycle": "one_time",
     "features": [
       "Linux basics",
