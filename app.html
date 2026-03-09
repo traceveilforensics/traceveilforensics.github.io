@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Download Trace Veil Forensics Mobile App">
+    <title>Download App | Trace Veil Forensics</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0A1628">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .app-hero {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #0A1628 0%, #1a2744 100%);
+        }
+        .app-container {
+            max-width: 800px;
+        }
+        .app-logo {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 30px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .app-title {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #fff;
+        }
+        .app-subtitle {
+            font-size: 1.3rem;
+            color: #a0aec0;
+            margin-bottom: 40px;
+        }
+        .download-section {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 36px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .download-btn-android {
+            background: linear-gradient(135deg, #3ddc84 0%, #28b571 100%);
+            color: #fff;
+        }
+        .download-btn-android:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(61, 220, 132, 0.4);
+        }
+        .download-btn-web {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .download-btn-web:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .features-list {
+            text-align: left;
+            max-width: 500px;
+            margin: 0 auto;
+            color: #a0aec0;
+        }
+        .features-list li {
+            padding: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .features-list i {
+            color: #3ddc84;
+        }
+        .version-info {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics Logo">
+            </a>
+            <nav class="nav-menu" id="navMenu">
+                <ul class="nav-list">
+                    <li><a href="index.html" class="nav-link">Home</a></li>
+                    <li><a href="services.html" class="nav-link">Services</a></li>
+                    <li><a href="about.html" class="nav-link">About</a></li>
+                    <li><a href="pricing.html" class="nav-link">Pricing</a></li>
+                    <li><a href="contact.html" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <section class="app-hero">
+        <div class="app-container">
+            <img src="LOGO_NAME_optimized.png" alt="Trace Veil Forensics" class="app-logo">
+            <h1 class="app-title">Trace Veil Forensics</h1>
+            <p class="app-title" style="font-size: 1.5rem; color: #3ddc84; margin-top: -10px;">Mobile App</p>
+            <p class="app-subtitle">Access our cybersecurity services on the go</p>
+            
+            <div class="download-section">
+                <a href="Trace_Veil_Forensics.apk" download class="download-btn download-btn-android">
+                    <i class="fab fa-android"></i>
+                    Download for Android
+                </a>
+                <a href="index.html" class="download-btn download-btn-web">
+                    <i class="fas fa-globe"></i>
+                    Use Web Version
+                </a>
+            </div>
+
+            <ul class="features-list">
+                <li><i class="fas fa-check-circle"></i> Full access to all services</li>
+                <li><i class="fas fa-check-circle"></i> Real-time notifications</li>
+                <li><i class="fas fa-check-circle"></i> Secure dashboard access</li>
+                <li><i class="fas fa-check-circle"></i> Request services anytime</li>
+                <li><i class="fas fa-check-circle"></i> View invoices & history</li>
+            </ul>
+
+            <p class="version-info">Version 1.0.0 | Requires Android 7.0+</p>
+        </div>
+    </section>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
