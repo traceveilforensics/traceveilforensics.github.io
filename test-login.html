@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Login</title></head>
+<body>
+<h1>Login Test</h1>
+<pre id="out"></pre>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+const out = document.getElementById('out');
+out.textContent = 'Testing login...\n';
+window.authSystem.login('admin@traceveilforensics.com', 'admin123').then(r => {
+    out.textContent += JSON.stringify(r, null, 2);
+});
+</script>
+</body>
+</html>

@@ -293,22 +293,6 @@
             box-shadow: 0 8px 30px rgba(255, 215, 0, 0.2);
             position: relative;
         }
-        .pricing-card.featured::before {
-            content: 'Popular';
-            position: absolute;
-            top: 16px;
-            right: -32px;
-            background: var(--accent);
-            color: var(--primary);
-            padding: 6px 40px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            transform: rotate(45deg);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
         .pricing-card.featured::after {
             background: linear-gradient(90deg, var(--accent), #ffe066);
             height: 4px;
@@ -631,48 +615,53 @@
     <!-- JavaScript -->
     <script src="shared.js"></script>
     <script>
-        const serviceDescriptions = {
-            's1': { title: 'Security Assessments', desc: 'Comprehensive security evaluation for your organization' },
-            's2': { title: 'Vulnerability Scanning', desc: 'Identify security weaknesses before attackers do' },
-            's3': { title: 'Incident Response', desc: 'Rapid response when security incidents occur' },
-            's4': { title: 'Digital Forensics', desc: 'Digital evidence analysis and investigation' },
-            's5': { title: 'IT Solutions', desc: 'IT infrastructure and technical support' },
-            's6': { title: 'Training & Awareness', desc: 'Security education and awareness programs' }
-        };
+         const serviceDescriptions = {
+             's1': { title: 'Security Assessments', desc: 'Comprehensive security evaluation for your organization' },
+             's2': { title: 'Vulnerability Scanning', desc: 'Identify security weaknesses before attackers do' },
+             's3': { title: 'Incident Response', desc: 'Rapid response when security incidents occur' },
+             's4': { title: 'Digital Forensics', desc: 'Digital evidence analysis and investigation' },
+             's5': { title: 'IT Solutions', desc: 'IT infrastructure and technical support' },
+             's6': { title: 'Training & Awareness', desc: 'Security education and awareness programs' }
+         };
 
-        const billingLabels = {
-            'one_time': 'one time',
-            'monthly': '/month',
-            'quarterly': '/quarter',
-            'yearly': '/year'
-        };
+         const billingLabels = {
+             'one_time': 'one time',
+             'monthly': '/month',
+             'quarterly': '/quarter',
+             'yearly': '/year'
+         };
 
-         async function loadPricing() {
-             try {
-                 // Load pricing from admin panel localStorage via auth.js
-                 const pricing = window.authSystem ? window.authSystem.getPricing() : [];
-                 const services = window.authSystem ? window.authSystem.getServices() : [];
-                 
-                 // Add service info to plans
-                 const plans = pricing.filter(p => p.active !== false).map(plan => {
-                     const service = services.find(s => s.id === parseInt(plan.service_id) || s.id === plan.service_id);
-                     return {
-                         ...plan,
-                         service_name: service?.name || 'Other Services',
-                         service_icon: service?.icon || 'fa-cog'
-                     };
-                 });
-                 
-                 renderPricing(plans);
-             } catch (error) {
-                 console.error('Error loading pricing:', error);
-                 document.getElementById('pricingContent').innerHTML = `
-                     <div class="empty-state">
-                         <i class="fas fa-exclamation-triangle"></i>
-                         <p>Unable to load pricing. Please try again later.</p>
-                     </div>
-                 `;
+         function loadPricing() {
+             if (!window.authSystem) {
+                 setTimeout(loadPricing, 100);
+                 return;
              }
+             
+             window.authSystem.waitForReady().then(() => {
+                 try {
+                     const pricing = window.authSystem.getPricing();
+                     const services = window.authSystem.getServices();
+                     
+                     const plans = pricing.filter(p => p.active !== false).map(plan => {
+                         const service = services.find(s => s.id === parseInt(plan.service_id) || s.id === plan.service_id);
+                         return {
+                             ...plan,
+                             service_name: service?.name || 'Other Services',
+                             service_icon: service?.icon || 'fa-cog'
+                         };
+                     });
+                     
+                     renderPricing(plans);
+                 } catch (error) {
+                     console.error('Error loading pricing:', error);
+                     document.getElementById('pricingContent').innerHTML = `
+                         <div class="empty-state">
+                             <i class="fas fa-exclamation-triangle"></i>
+                             <p>Unable to load pricing. Please try again later.</p>
+                         </div>
+                     `;
+                 }
+             });
          }
 
         function renderPricing(plans) {
@@ -717,12 +706,9 @@
                 servicePlans.forEach((plan, index) => {
                     const price = parseFloat(plan.price || 0);
                     const features = plan.features || [];
-                    const featureCount = features.length;
-                    const maxFeatures = Math.max(...servicePlans.map(p => (p.features||[]).length));
-                    const isFeatured = featureCount === maxFeatures && maxFeatures > 0;
                     
                     html += `
-                        <div class="pricing-card ${isFeatured ? 'featured' : ''}">
+                        <div class="pricing-card">
                             <div class="pricing-header">
                                 <h3>${plan.name}</h3>
                                 <p>${plan.description || ''}</p>

@@ -1611,23 +1611,37 @@
             init();
         });
 
-        function init() {
-            // Check authentication
-            if (!window.authSystem.isAuthenticated()) {
+        let initialized = false;
+        
+        async function init() {
+            if (initialized) return;
+            initialized = true;
+            
+            // Check if user exists in localStorage
+            const user = window.authSystem.getStoredUser();
+            if (!user) {
                 window.location.href = 'admin-login.html';
                 return;
             }
-
-            currentUser = window.authSystem.getCurrentUser();
-            if (!currentUser || currentUser.role !== 'admin') {
-                window.location.href = 'admin-login.html';
+            
+            // Check if admin
+            if (user.role !== 'admin') {
+                // Show message but don't redirect
+                document.getElementById('contentArea').innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;"><p>You are logged in as ' + user.email + ' but not as admin.</p><a href="admin-login.html">Login as admin</a></div>';
                 return;
             }
 
+            currentUser = user;
+            
             // Update UI
-            document.getElementById('userName').textContent = `${currentUser.first_name} ${currentUser.last_name}`;
-            document.getElementById('userAvatar').textContent = currentUser.first_name.charAt(0).toUpperCase();
+            const firstName = currentUser.first_name || currentUser.email?.split('@')[0] || 'Admin';
+            const lastName = currentUser.last_name || '';
+            document.getElementById('userName').textContent = `${firstName} ${lastName}`.trim();
+            document.getElementById('userAvatar').textContent = firstName.charAt(0).toUpperCase();
 
+            // Wait for data to be ready
+            await window.authSystem.waitForReady();
+            
             // Setup navigation
             setupNavigation();
 
@@ -3062,29 +3076,35 @@
 
                 <!-- Customers Grid -->
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-                    ${customers.length ? customers.map(cust => `
+                    ${customers.length ? customers.map(cust => {
+                        const displayName = cust.first_name && cust.last_name 
+                            ? cust.first_name + ' ' + cust.last_name 
+                            : cust.company_name || cust.email || 'Customer';
+                        const initials = cust.first_name?.charAt(0) || cust.company_name?.charAt(0) || 'C';
+                        return `
                         <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 16px; padding: 24px;">
                             <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
                                 <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #FFD700, #e6c200); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: 700; font-size: 18px;">
-                                    ${cust.first_name.charAt(0)}${cust.last_name ? cust.last_name.charAt(0) : ''}
+                                    ${initials.toUpperCase()}
                                 </div>
                                 <div>
-                                    <h4 style="color: #ffffff; font-size: 18px; font-weight: 600;">${cust.first_name} ${cust.last_name || ''}</h4>
+                                    <h4 style="color: #ffffff; font-size: 18px; font-weight: 600;">${displayName}</h4>
                                     <p style="color: #64748b; font-size: 13px;">ID: ${cust.id}</p>
                                 </div>
                             </div>
                             <div style="margin-bottom: 16px;">
-                                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;"><i class="fas fa-envelope" style="width: 20px; color: #64748b;"></i> ${cust.email}</p>
+                                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 8px;"><i class="fas fa-envelope" style="width: 20px; color: #64748b;"></i> ${cust.email || 'N/A'}</p>
                                 <p style="color: #94a3b8; font-size: 14px;"><i class="fas fa-phone" style="width: 20px; color: #64748b;"></i> ${cust.phone || 'N/A'}</p>
+                                <p style="color: #64748b; font-size: 12px; margin-top: 8px;"><i class="fas fa-building" style="width: 20px;"></i> ${cust.company_name || 'N/A'}</p>
                                 <p style="color: #64748b; font-size: 12px; margin-top: 8px;"><i class="fas fa-calendar" style="width: 20px;"></i> Joined: ${cust.created_at ? cust.created_at.split('T')[0] : 'N/A'}</p>
                             </div>
                             <div style="display: flex; gap: 10px; border-top: 1px solid #334155; padding-top: 16px;">
-                                <button onclick="viewCustomer(${cust.id})" style="flex: 1; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-eye"></i> View</button>
-                                <button onclick="editCustomer(${cust.id})" style="flex: 1; background: rgba(255,215,0,0.1); border: 1px solid #FFD700; color: #FFD700; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-edit"></i> Edit</button>
-                                <button onclick="deleteCustomer(${cust.id})" style="flex: 1; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-trash"></i></button>
+                                <button onclick="viewCustomer('${cust.id}')" style="flex: 1; background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-eye"></i> View</button>
+                                <button onclick="editCustomer('${cust.id}')" style="flex: 1; background: rgba(255,215,0,0.1); border: 1px solid #FFD700; color: #FFD700; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-edit"></i> Edit</button>
+                                <button onclick="deleteCustomer('${cust.id}')" style="flex: 1; background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;"><i class="fas fa-trash"></i></button>
                             </div>
                         </div>
-                    `).join('') : `
+                    `}).join('') : `
                         <div style="text-align: center; padding: 60px; background: #0d1f35; border: 2px dashed #334155; border-radius: 16px; grid-column: 1/-1;">
                             <i class="fas fa-users" style="color: #64748b; font-size: 60px; margin-bottom: 20px;"></i>
                             <h3 style="color: #ffffff; margin-bottom: 10px;">No customers yet</h3>
@@ -3460,7 +3480,7 @@
         }
 
         function loadAdminReviews() {
-            const reviews = getAdminReviews();
+            const reviews = window.authSystem.getReviews();
             const activeReviews = reviews.filter(r => r.flagged !== true);
             const flaggedReviews = reviews.filter(r => r.flagged === true);
 
@@ -3482,15 +3502,14 @@
                                     <div style="margin-bottom: 8px;">
                                         ${[1,2,3,4,5].map(i => `<i class="fas fa-star" style="color: ${i <= review.rating ? '#FFD700' : '#475569'}; font-size: 14px;"></i>`).join('')}
                                     </div>
-                                    <h4 style="color: #ffffff; margin-bottom: 8px; font-size: 16px;">${review.title}</h4>
                                 </div>
                                 <div style="display: flex; gap: 8px;">
-                                    <button onclick="flagReview(${review.id})" style="background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; color: #f59e0b; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-flag"></i> Flag</button>
-                                    <button onclick="deleteReview(${review.id})" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-trash"></i> Delete</button>
+                                    <button onclick="flagReview('${review.id}')" style="background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; color: #f59e0b; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-flag"></i> Flag</button>
+                                    <button onclick="deleteReview('${review.id}')" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-trash"></i> Delete</button>
                                 </div>
                             </div>
-                            <p style="color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">${review.content}</p>
-                            <p style="color: #64748b; font-size: 12px;">- ${review.customer_name} | ${new Date(review.date).toLocaleDateString()}</p>
+                            <p style="color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">${review.comment || review.content || ''}</p>
+                            <p style="color: #64748b; font-size: 12px;">- ${review.customer_name || 'Anonymous'} | ${review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}</p>
                         </div>
                     `).join('') : '<p style="color: #64748b; text-align: center; padding: 20px;">No active reviews</p>'}
                 </div>
@@ -3506,15 +3525,14 @@
                                     <div style="margin-bottom: 8px;">
                                         ${[1,2,3,4,5].map(i => `<i class="fas fa-star" style="color: ${i <= review.rating ? '#FFD700' : '#475569'}; font-size: 14px;"></i>`).join('')}
                                     </div>
-                                    <h4 style="color: #ffffff; margin-bottom: 8px; font-size: 16px;">${review.title}</h4>
                                 </div>
                                 <div style="display: flex; gap: 8px;">
-                                    <button onclick="unflagReview(${review.id})" style="background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-check"></i> Unflag</button>
-                                    <button onclick="deleteReview(${review.id})" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-trash"></i> Delete</button>
+                                    <button onclick="unflagReview('${review.id}')" style="background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-check"></i> Unflag</button>
+                                    <button onclick="deleteReview('${review.id}')" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;"><i class="fas fa-trash"></i> Delete</button>
                                 </div>
                             </div>
-                            <p style="color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">${review.content}</p>
-                            <p style="color: #64748b; font-size: 12px;">- ${review.customer_name} | ${new Date(review.date).toLocaleDateString()}</p>
+                            <p style="color: #94a3b8; margin-bottom: 12px; line-height: 1.6;">${review.comment || review.content || ''}</p>
+                            <p style="color: #64748b; font-size: 12px;">- ${review.customer_name || 'Anonymous'} | ${review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}</p>
                         </div>
                     `).join('')}
                 </div>
@@ -3523,30 +3541,30 @@
         }
 
         function flagReview(id) {
-            const reviews = getAdminReviews();
+            const reviews = window.authSystem.getReviews();
             const review = reviews.find(r => r.id === id);
             if (review) {
                 review.flagged = true;
-                saveAdminReviews(reviews);
+                window.authSystem.saveReviews(reviews);
                 loadAdminReviews();
             }
         }
 
         function unflagReview(id) {
-            const reviews = getAdminReviews();
+            const reviews = window.authSystem.getReviews();
             const review = reviews.find(r => r.id === id);
             if (review) {
                 review.flagged = false;
-                saveAdminReviews(reviews);
+                window.authSystem.saveReviews(reviews);
                 loadAdminReviews();
             }
         }
 
         function deleteReview(id) {
             if (confirm('Are you sure you want to delete this review?')) {
-                const reviews = getAdminReviews();
+                const reviews = window.authSystem.getReviews();
                 const filtered = reviews.filter(r => r.id !== id);
-                saveAdminReviews(filtered);
+                window.authSystem.saveReviews(filtered);
                 loadAdminReviews();
             }
         }

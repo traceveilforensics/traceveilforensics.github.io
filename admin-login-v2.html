@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login v2</title>
+    <style>
+        body { font-family: Arial; background: #0A1628; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .box { background: white; color: #333; padding: 40px; border-radius: 12px; width: 350px; }
+        h2 { text-align: center; color: #0A1628; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 2px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #FFD700; color: #0A1628; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #e6c200; }
+        .error { background: #fee; color: #c00; padding: 10px; border-radius: 6px; margin-top: 10px; display: none; }
+        #debug { margin-top: 20px; padding: 10px; background: #eee; font-size: 12px; max-height: 200px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Admin Login</h2>
+        <div id="error" class="error"></div>
+        <input type="email" id="email" value="admin@traceveilforensics.com" placeholder="Email">
+        <input type="password" id="password" value="admin123" placeholder="Password">
+        <button id="btn" onclick="doLogin()">Login</button>
+        <div id="debug"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const debug = document.getElementById('debug');
+        const error = document.getElementById('error');
+        
+        function log(msg) {
+            debug.innerHTML += msg + '<br>';
+            console.log(msg);
+        }
+        
+        log('Supabase: ' + typeof supabase);
+        
+        const sb = supabase.createClient(
+            'https://eapkpppftrxrwtwjbcen.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY'
+        );
+        
+        async function doLogin() {
+            log('Login clicked');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            log('Email: ' + email);
+            log('Calling signInWithPassword...');
+            
+            const { data, error: err } = await sb.auth.signInWithPassword({ email, password });
+            
+            log('Response received');
+            log('Error: ' + (err?.message || 'none'));
+            log('User: ' + (data?.user?.email || 'none'));
+            
+            if (err) {
+                error.textContent = err.message;
+                error.style.display = 'block';
+            } else if (data?.user) {
+                log('SUCCESS! Redirecting...');
+                localStorage.setItem('user', JSON.stringify({
+                    id: data.user.id,
+                    email: data.user.email,
+                    role: data.user.user_metadata?.role || 'admin',
+                    first_name: data.user.user_metadata?.first_name || '',
+                    last_name: data.user.user_metadata?.last_name || ''
+                }));
+                localStorage.setItem('token', 'supabase-session');
+                window.location.href = 'admin-dashboard.html';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test All</title></head>
+<body style="font-family:Arial;padding:20px;background:#0a1628;color:white;min-height:100vh;">
+<h1>Trace Veil - Full Test</h1>
+<pre id="out" style="background:#1e3a5f;padding:20px;border-radius:10px;white-space:pre-wrap;font-size:14px;"></pre>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+const out = document.getElementById('out');
+function log(msg) { 
+    out.textContent += msg + '\n'; 
+    console.log(msg);
+}
+
+async function test() {
+    log('=== LOADING ===');
+    await new Promise(r => setTimeout(r, 2000));
+    
+    log('\n=== DATA FROM SUPABASE ===');
+    log('Services: ' + window.authSystem.getServices().length);
+    log('Pricing: ' + window.authSystem.getPricing().length);
+    log('Customers: ' + window.authSystem.getCustomers().length);
+    log('Invoices: ' + window.authSystem.getInvoices().length);
+    log('Requests: ' + window.authSystem.getServiceRequests().length);
+    log('Reviews: ' + window.authSystem.getReviews().length);
+    
+    const stats = window.authSystem.getDashboardStats();
+    log('\n=== DASHBOARD STATS ===');
+    log('Total Customers: ' + stats.totalCustomers);
+    log('Total Revenue: KES ' + stats.totalRevenue);
+    log('Pending Invoices: ' + stats.pendingInvoices);
+    log('Total Requests: ' + stats.totalRequests);
+    
+    log('\n=== AUTH STATUS ===');
+    const user = window.authSystem.getStoredUser();
+    if (user) {
+        log('Logged in: ' + user.email);
+        log('Role: ' + user.role);
+        if (user.role === 'admin') {
+            log('\n>>> ADMIN ACCESS GRANTED <<<');
+        }
+    } else {
+        log('Not logged in');
+        log('\n>>> GO TO admin-login.html TO LOGIN <<<');
+    }
+}
+
+test();
+</script>
+
+<h2 style="margin-top:30px;">Quick Links:</h2>
+<ul>
+<li><a href="admin-login.html" style="color:#FFD700;">Admin Login</a></li>
+<li><a href="admin-dashboard.html" style="color:#FFD700;">Admin Dashboard</a></li>
+<li><a href="index.html" style="color:#FFD700;">Website Home</a></li>
+<li><a href="pricing.html" style="color:#FFD700;">Pricing</a></li>
+<li><a href="about.html" style="color:#FFD700;">About</a></li>
+</ul>
+
+<h2 style="margin-top:30px;">Notes:</h2>
+<ol style="color:#94a3b8;">
+<li>Make sure to clear browser cache or use incognito mode</li>
+<li>If logged in as non-admin, logout first from admin-login.html</li>
+<li>Login with: admin@traceveilforensics.com / admin123</li>
+</ol>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Test</title>
+</head>
+<body>
+    <h1>Browser Debug Test</h1>
+    <div id="debug" style="font-family: monospace; padding: 20px; background: #f0f0f0;"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    
+    <script>
+        const debug = document.getElementById('debug');
+        
+        function log(msg, isError = false) {
+            const p = document.createElement('p');
+            p.style.color = isError ? 'red' : 'black';
+            p.textContent = msg;
+            debug.appendChild(p);
+            console.log(msg);
+        }
+        
+        log('=== Starting Debug ===');
+        log('Supabase SDK loaded: ' + (typeof window.supabase !== 'undefined'));
+        log('authSystem exists: ' + (typeof window.authSystem !== 'undefined'));
+        
+        if (typeof window.supabase !== 'undefined') {
+            log('Testing direct Supabase login...');
+            
+            const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
+            const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY';
+            
+            const sb = window.supabase.createClient(SB_URL, SB_ANON);
+            
+            sb.auth.signInWithPassword({
+                email: 'admin@traceveilforensics.com',
+                password: 'admin123'
+            }).then(result => {
+                log('Result error: ' + (result.error?.message || 'none'));
+                log('Result user: ' + (result.data?.user?.email || 'none'));
+                log('Result session: ' + (result.data?.session ? 'present' : 'missing'));
+                
+                if (result.data?.user) {
+                    log('LOGIN SUCCESS via direct SDK!');
+                }
+            }).catch(err => {
+                log('Exception: ' + err.message, true);
+            });
+        } else {
+            log('Supabase SDK NOT loaded!', true);
+        }
+    </script>
+</body>
+</html>

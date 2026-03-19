@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Login Test</title>
+</head>
+<body>
+    <h1>Direct Login Test</h1>
+    <div id="results" style="padding: 20px; font-family: monospace;"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const results = document.getElementById('results');
+        
+        function add(msg, color = 'black') {
+            const div = document.createElement('div');
+            div.style.color = color;
+            div.textContent = msg;
+            results.appendChild(div);
+            console.log(msg);
+        }
+        
+        add('1. Supabase loaded: ' + (typeof supabase !== 'undefined'));
+        
+        const sb = supabase.createClient(
+            'https://eapkpppftrxrwtwjbcen.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY'
+        );
+        
+        add('2. Client created');
+        
+        sb.auth.signInWithPassword({
+            email: 'admin@traceveilforensics.com',
+            password: 'admin123'
+        }).then(res => {
+            add('3. Response received');
+            add('   Error: ' + (res.error?.message || 'none'));
+            add('   User: ' + (res.data?.user?.email || 'none'));
+            add('   Session: ' + (res.data?.session ? 'YES' : 'NO'));
+            
+            if (res.data?.user) {
+                add('✅ LOGIN SUCCESS!', 'green');
+                localStorage.setItem('test_user', JSON.stringify(res.data.user));
+                localStorage.setItem('test_session', res.data.session.access_token);
+            }
+        }).catch(err => {
+            add('❌ CATCH ERROR: ' + err.message, 'red');
+        });
+    </script>
+</body>
+</html>

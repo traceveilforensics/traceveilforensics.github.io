@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RLS Test</title>
+</head>
+<body>
+    <h1>Test RLS</h1>
+    <pre id="out" style="background:#1a1a2e; color: #0f0; padding: 20px;"></pre>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const out = document.getElementById('out');
+        function log(msg, color = '#0f0') {
+            const line = document.createElement('div');
+            line.style.color = color;
+            line.textContent = msg;
+            out.appendChild(line);
+        }
+        
+        const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
+        const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
+        
+        async function test() {
+            log('Testing with SERVICE key...', '#FFD700');
+            
+            // Create service client
+            const svcClient = supabase.createClient(SB_URL, SB_SVC);
+            
+            // Check session
+            const session = await svcClient.auth.getSession();
+            log('Session: ' + (session.data.session ? 'YES - role: ' + session.data.session.user.role : 'NO'));
+            
+            // Test each table
+            const tables = ['customers', 'invoices', 'service_requests'];
+            
+            for (const table of tables) {
+                log('\n' + table + ':', '#FFD700');
+                const { data, error } = await svcClient.from(table).select('*');
+                log('  Count: ' + (data?.length || 0));
+                log('  Error: ' + (error?.message || 'none'));
+                if (data && data.length > 0) {
+                    log('  First item: ' + JSON.stringify(data[0]).substring(0, 100));
+                }
+            }
+        }
+        
+        test();
+    </script>
+</body>
+</html>

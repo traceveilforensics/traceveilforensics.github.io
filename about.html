@@ -11,6 +11,8 @@
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -306,44 +308,19 @@
         const REVIEWS_KEY = 'customer_reviews';
         
         function getReviews() {
-            let reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
-            
-            if (reviews.length === 0) {
-                reviews = [
-                    {
-                        id: 1,
-                        customer_email: "customer@traceveilforensics.com",
-                        customer_name: "John Doe",
-                        rating: 5,
-                        title: "Excellent Security Assessment",
-                        content: "Trace Veil Forensics conducted a thorough vulnerability assessment of our network infrastructure. Their team identified critical vulnerabilities that we were unaware of and provided actionable recommendations. Highly recommended!",
-                        date: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        customer_email: "test@test.com",
-                        customer_name: "Sarah Johnson",
-                        rating: 5,
-                        title: "Professional and Thorough Service",
-                        content: "We hired Trace Veil for a comprehensive security audit. The team was professional, knowledgeable, and delivered the report on time. Great service!",
-                        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-                    },
-                    {
-                        id: 3,
-                        customer_email: "ariesgemini1st@gmail.com",
-                        customer_name: "Michael Chen",
-                        rating: 4,
-                        title: "Great Security Consultation",
-                        content: "The security assessment exceeded our expectations. The team identified several weaknesses and helped us implement proper security measures.",
-                        date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-                    }
-                ];
-                localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
+            if (window.authSystem && window.authSystem.isReady()) {
+                return Promise.resolve(window.authSystem.getReviews());
             }
-            
-            return reviews;
+            return new Promise(resolve => {
+                const check = setInterval(() => {
+                    if (window.authSystem && window.authSystem.isReady()) {
+                        clearInterval(check);
+                        resolve(window.authSystem.getReviews());
+                    }
+                }, 100);
+            });
         }
-
+        
         function generateStars(rating) {
             let stars = '';
             for (let i = 1; i <= 5; i++) {
@@ -357,27 +334,37 @@
         }
 
         function loadTopReviews() {
-            const reviews = getReviews();
-            const activeReviews = reviews.filter(r => r.flagged !== true).sort((a, b) => b.rating - a.rating).slice(0, 3);
-            
-            const grid = document.getElementById('reviewsGrid');
-            
-            if (activeReviews.length > 0) {
-                grid.innerHTML = activeReviews.map(review => `
-                    <div class="review-card">
-                        <div class="review-stars">${generateStars(review.rating)}</div>
-                        <p class="review-text">"${review.content}"</p>
-                        <div class="review-author">
-                            <strong>${review.customer_name}</strong>
+            getReviews().then(reviews => {
+                const activeReviews = reviews
+                    .filter(r => r.flagged !== true)
+                    .sort((a, b) => b.rating - a.rating)
+                    .slice(0, 3);
+                
+                const grid = document.getElementById('reviewsGrid');
+                
+                if (activeReviews.length > 0) {
+                    grid.innerHTML = activeReviews.map(review => `
+                        <div class="review-card">
+                            <div class="review-stars">${generateStars(review.rating)}</div>
+                            <p class="review-text">"${review.comment || review.content || ''}"</p>
+                            <div class="review-author">
+                                <strong>${review.customer_name || 'Anonymous'}</strong>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
-            } else {
-                grid.innerHTML = '<p style="text-align: center; color: #666;">No reviews yet. Be our first client to leave a review!</p>';
-            }
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<p style="text-align: center; color: #666;">No reviews yet. Be our first client to leave a review!</p>';
+                }
+            });
         }
         
-        document.addEventListener('DOMContentLoaded', loadTopReviews);
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.authSystem && window.authSystem.isReady()) {
+                loadTopReviews();
+            } else {
+                window.addEventListener('authSystemReady', loadTopReviews);
+            }
+        });
     </script>
 
     <style>
@@ -520,6 +507,8 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <script src="shared.js"></script>
     <script>
         // Immediate setup

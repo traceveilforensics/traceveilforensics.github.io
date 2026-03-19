@@ -1,0 +1,37 @@
+[
+  {
+    "id": "pricing-plan-1",
+    "name": "Basic Security Plan",
+    "price": "2500 KES",
+    "currency": "KES",
+    "features": [
+      "Basic system and account security evaluation",
+      "Account & credential check",
+      "Quick summary report"
+    ]
+  },
+  {
+    "id": "pricing-plan-2",
+    "name": "Website Security Plan",
+    "price": "15000 KES",
+    "currency": "KES",
+    "features": [
+      "Website configuration & CMS review",
+      "Admin panel security audit",
+      "Basic vulnerability check",
+      "Recommendations report"
+    ]
+  },
+  {
+    "id": "pricing-plan-3",
+    "name": "Most Popular Plan",
+    "price": "35000 KES",
+    "currency": "KES",
+    "features": [
+      "Device & endpoint review",
+      "Access control evaluation",
+      "Policy & procedure check",
+      "Detailed audit report"
+    ]
+  }
+]

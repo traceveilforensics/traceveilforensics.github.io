@@ -972,8 +972,7 @@
     <script>
         let currentUser = null;
 
-        function init() {
-            // Check both localStorage and sessionStorage
+        async function init() {
             let token = localStorage.getItem('token');
             let user = localStorage.getItem('user');
             
@@ -990,8 +989,9 @@
             currentUser = JSON.parse(user);
             document.getElementById('welcomeText').textContent = `Welcome back, ${currentUser.first_name || currentUser.email}!`;
 
-            loadOverview();
+            await window.authSystem.waitForReady();
             setupNavigation();
+            loadOverview();
         }
 
         function setupNavigation() {
@@ -1067,10 +1067,11 @@
             }
         }
 
-        function loadOverview() {
+        async function loadOverview() {
             const user = currentUser;
             const userEmail = user.email;
             
+            await window.authSystem.waitForReady();
             const allInvoices = window.authSystem.getInvoices();
             const allRequests = window.authSystem.getServiceRequests();
             
@@ -1181,7 +1182,8 @@
             `;
         }
 
-        function loadInvoices() {
+        async function loadInvoices() {
+            await window.authSystem.waitForReady();
             const userEmail = currentUser.email;
             const allInvoices = window.authSystem.getInvoices();
             const myInvoices = allInvoices.filter(inv => inv.customer_email && inv.customer_email.toLowerCase() === userEmail.toLowerCase());
@@ -1224,7 +1226,8 @@
             `;
         }
 
-        function loadRequests() {
+        async function loadRequests() {
+            await window.authSystem.waitForReady();
             const userEmail = currentUser.email;
             const allRequests = window.authSystem.getServiceRequests();
             const myRequests = allRequests.filter(req => req.customer_email === userEmail);
@@ -1511,7 +1514,8 @@
             openModal();
         }
 
-        function loadProfile() {
+        async function loadProfile() {
+            await window.authSystem.waitForReady();
             const user = currentUser;
             const customers = window.authSystem.getCustomers();
             const customer = customers.find(c => c.email.toLowerCase() === user.email.toLowerCase()) || { ...user };

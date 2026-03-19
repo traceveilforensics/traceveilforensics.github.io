@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head><title>No Blink</title></head>
+<body>
+<h1>Loading...</h1>
+<div id="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+const status = document.getElementById('status');
+status.textContent = 'Scripts loaded. Checking auth...';
+
+if (window.authSystem && window.authSystem.getStoredUser()) {
+    const user = window.authSystem.getStoredUser();
+    if (user.role === 'admin') {
+        status.textContent = 'Admin found! Redirecting...';
+        window.location.replace('admin-dashboard.html');
+    } else {
+        status.textContent = 'Not admin. Go to login.';
+        window.location.replace('admin-login.html');
+    }
+} else {
+    status.textContent = 'No user. Go to login.';
+    window.location.replace('admin-login.html');
+}
+</script>
+</body>
+</html>

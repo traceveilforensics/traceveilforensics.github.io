@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Full Flow Test</title>
+</head>
+<body>
+    <h1>Full Login → Dashboard Flow Test</h1>
+    
+    <div style="padding: 20px;">
+        <button onclick="runFullTest()" style="padding: 15px 30px; font-size: 16px; background: #FFD700; border: none; border-radius: 8px; cursor: pointer;">
+            Run Full Test
+        </button>
+    </div>
+    
+    <pre id="out" style="background:#1a1a2e; color: #0f0; padding: 20px; border-radius: 8px; max-height: 500px; overflow: auto;"></pre>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    
+    <script>
+        const out = document.getElementById('out');
+        function log(msg, color = '#0f0') {
+            const line = document.createElement('div');
+            line.style.color = color;
+            line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+            out.appendChild(line);
+            out.scrollTop = out.scrollHeight;
+            console.log(msg);
+        }
+        
+        async function runFullTest() {
+            log('=== STARTING FULL FLOW TEST ===', '#FFD700');
+            
+            // Step 1: Check localStorage is empty
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+            log('1. Cleared localStorage');
+            
+            // Step 2: Login
+            log('2. Attempting login...');
+            const result = await window.authSystem.login('admin@traceveilforensics.com', 'admin123');
+            
+            if (!result.success) {
+                log('❌ LOGIN FAILED: ' + result.error, '#ff4444');
+                return;
+            }
+            log('✓ Login successful!', '#44ff44');
+            log('   User: ' + result.user.email);
+            log('   Role: ' + result.user.role);
+            
+            // Step 3: Check localStorage
+            const storedUser = localStorage.getItem('user');
+            log('3. localStorage user: ' + (storedUser ? 'present' : 'MISSING'));
+            
+            // Step 4: Check isAuthenticated
+            log('4. isAuthenticated: ' + window.authSystem.isAuthenticated());
+            
+            // Step 5: Check getStoredUser
+            const user = window.authSystem.getStoredUser();
+            log('5. getStoredUser: ' + (user ? user.email + ' (' + user.role + ')' : 'null'));
+            
+            // Step 6: Wait for data
+            log('6. Waiting for data to load...');
+            await window.authSystem.waitForReady();
+            log('✓ Data ready!', '#44ff44');
+            
+            // Step 7: Get data
+            const stats = window.authSystem.getDashboardStats();
+            log('7. Dashboard stats:', '#FFD700');
+            log('   Total customers: ' + stats.totalCustomers);
+            log('   Total revenue: KES ' + stats.totalRevenue.toLocaleString());
+            log('   Pending invoices: ' + stats.pendingInvoices);
+            log('   Total requests: ' + stats.totalRequests);
+            
+            const services = window.authSystem.getServices();
+            const pricing = window.authSystem.getPricing();
+            log('   Services: ' + services.length);
+            log('   Pricing plans: ' + pricing.length);
+            
+            // Step 8: Verify dashboard would work
+            log('8. Verifying dashboard access...', '#FFD700');
+            if (user.role === 'admin') {
+                log('✓ User is admin - would redirect to admin-dashboard.html');
+            } else {
+                log('⚠ User is NOT admin - would redirect to customer-dashboard.html');
+            }
+            
+            log('=== TEST COMPLETE ===', '#FFD700');
+            log('');
+            log('If all above checks passed, the system should work.', '#88ff88');
+            log('Try: admin-login-v2.html → login → should see dashboard', '#88ff88');
+        }
+    </script>
+</body>
+</html>

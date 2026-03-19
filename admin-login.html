@@ -128,12 +128,12 @@
             <form id="loginForm">
                 <div class="form-group">
                     <label for="email">Email Address</label>
-                    <input type="email" id="email" name="email" required placeholder="admin@traceveilforensics.com">
+                    <input type="email" id="email" name="email" required placeholder="admin@traceveilforensics.com" autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
+                    <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="current-password">
                 </div>
 
                 <button type="submit" class="auth-button" id="loginButton">
@@ -148,60 +148,61 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
     <script>
-        const loginForm = document.getElementById('loginForm');
-        const loginButton = document.getElementById('loginButton');
-        const spinner = document.getElementById('spinner');
-        const errorMessage = document.getElementById('errorMessage');
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            const spinner = document.getElementById('spinner');
+            const errorMessage = document.getElementById('errorMessage');
 
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
 
-            loginButton.disabled = true;
-            spinner.style.display = 'inline-block';
-            errorMessage.style.display = 'none';
+                loginButton.disabled = true;
+                spinner.style.display = 'inline-block';
+                errorMessage.style.display = 'none';
 
-            try {
-                // Use client-side authentication
-                const result = window.authSystem.login(email, password);
+                try {
+                    const result = await window.authSystem.login(email, password);
 
-                if (result.success) {
-                    const token = window.authSystem.generateToken();
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('user', JSON.stringify(result.user));
-                    localStorage.setItem('loginTime', Date.now());
+                    if (result.success) {
+                        localStorage.setItem('token', 'supabase-session');
+                        localStorage.setItem('user', JSON.stringify(result.user));
+                        localStorage.setItem('loginTime', Date.now());
 
-                    if (result.user.role === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
+                        if (result.user.role === 'admin') {
+                            window.location.href = 'admin-dashboard.html';
+                        } else {
+                            window.location.href = 'customer-dashboard.html';
+                        }
                     } else {
-                        window.location.href = 'customer-dashboard.html';
+                        errorMessage.textContent = result.error || 'Login failed. Please try again.';
+                        errorMessage.style.display = 'block';
                     }
-                } else {
-                    errorMessage.textContent = result.error || 'Login failed. Please try again.';
+                } catch (error) {
+                    errorMessage.textContent = 'An error occurred. Please try again.';
                     errorMessage.style.display = 'block';
+                } finally {
+                    loginButton.disabled = false;
+                    spinner.style.display = 'none';
                 }
-            } catch (error) {
-                errorMessage.textContent = 'An error occurred. Please try again.';
-                errorMessage.style.display = 'block';
-            } finally {
-                loginButton.disabled = false;
-                spinner.style.display = 'none';
+            });
+
+            // Check if already logged in
+            if (window.authSystem && window.authSystem.isAuthenticated()) {
+                const user = window.authSystem.getCurrentUser();
+                if (user && user.role === 'admin') {
+                    window.location.href = 'admin-dashboard.html';
+                } else if (user) {
+                    window.location.href = 'customer-dashboard.html';
+                }
             }
         });
-
-        // Check if already logged in
-        if (window.authSystem.isAuthenticated()) {
-            const user = window.authSystem.getCurrentUser();
-            if (user.role === 'admin') {
-                window.location.href = 'admin-dashboard.html';
-            } else {
-                window.location.href = 'customer-dashboard.html';
-            }
-        }
     </script>
 </body>
 </html>

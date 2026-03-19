@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head><title>Super Simple</title></head>
+<body>
+<h1 id="title">Loading...</h1>
+<p id="msg"></p>
+<button id="btn" style="display:none;">Go to Dashboard</button>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth.js"></script>
+<script>
+const title = document.getElementById('title');
+const msg = document.getElementById('msg');
+const btn = document.getElementById('btn');
+
+setTimeout(() => {
+    title.textContent = 'Scripts loaded';
+    msg.textContent = 'authSystem: ' + (!!window.authSystem);
+    
+    const user = window.authSystem?.getStoredUser();
+    if (user) {
+        msg.textContent += '\nUser: ' + user.email + '\nRole: ' + user.role;
+        btn.style.display = 'block';
+        btn.onclick = () => {
+            // Use replace instead of href to avoid history issues
+            window.location.replace('admin-dashboard.html');
+        };
+    } else {
+        msg.textContent += '\nNo user found';
+    }
+}, 500);
+</script>
+</body>
+</html>
