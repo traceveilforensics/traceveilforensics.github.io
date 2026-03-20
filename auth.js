@@ -1,7 +1,13 @@
 // Supabase configuration
 const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY';
+
+// Service role key - NOTE: Should be moved to Netlify Functions for production security
+// For now, this key bypasses RLS. Set SUPABASE_SERVICE_KEY in Netlify env vars.
 const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
+
+// Netlify Functions URL (for secure admin operations)
+const NF_URL = '/.netlify/functions';
 
 let _sb = null;
 let _cache = { services: [], pricing: [], customers: [], invoices: [], requests: [], reviews: [] };
@@ -1140,43 +1146,10 @@ async function resetCustomerPassword(email) {
     }
 }
 
-// Admin set customer password directly (using service role)
+// Admin set customer password directly (via Netlify Function - secure)
 async function adminSetPassword(email, newPassword) {
     try {
-        // First, get user by email using admin API
-        const response = await fetch(`${SB_URL}/auth/v1/admin/users`, {
-            method: 'GET',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to get users');
-        
-        const users = await response.json();
-        const user = users.find(u => u.email === email);
-        
-        if (!user) return { success: false, error: 'User not found' };
-        
-        // Update password using admin API
-        const updateResponse = await fetch(`${SB_URL}/auth/v1/admin/users/${user.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                password: newPassword
-            })
-        });
-        
-        if (!updateResponse.ok) {
-            const err = await updateResponse.text();
-            throw new Error(err);
-        }
-        
+        const result = await nfAuth('set-password', { email, password: newPassword });
         console.log('Password updated for:', email);
         return { success: true, message: 'Password updated successfully' };
     } catch (e) {
@@ -1377,3 +1350,36 @@ setInterval(() => {
         window._sb = _sb;
     }
 }, 100);
+
+// Netlify Functions helpers (secure - no service key exposure)
+async function nfFetch(table, options = {}) {
+    const { method = 'GET', id, data, params } = options;
+    
+    const response = await fetch(`${NF_URL}/supabase-proxy`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ table, id, data, params })
+    });
+    
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err);
+    }
+    
+    return response.json();
+}
+
+async function nfAuth(action, data = {}) {
+    const response = await fetch(`${NF_URL}/auth-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ...data })
+    });
+    
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err);
+    }
+    
+    return response.json();
+}
