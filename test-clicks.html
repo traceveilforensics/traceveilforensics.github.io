@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Click Handlers</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        body { background: #0f172a; color: #f1f5f9; font-family: monospace; padding: 20px; }
+        button { padding: 15px 30px; margin: 10px; cursor: pointer; background: #ffd700; color: #0f172a; border: none; border-radius: 8px; font-size: 16px; }
+        button:hover { background: #e6c200; }
+        #log { background: #1e293b; padding: 20px; margin-top: 20px; border-radius: 8px; max-height: 400px; overflow-y: auto; }
+        .entry { padding: 5px 0; border-bottom: 1px solid #334155; }
+    </style>
+</head>
+<body>
+    <h1>Test Click Handlers</h1>
+    
+    <h2>1. Direct Function Call (after data loads)</h2>
+    <button onclick="testDirectCall()">Test Direct Call</button>
+    <button onclick="testAuthSystem()">Test authSystem</button>
+    
+    <h2>2. Render Dynamic Content</h2>
+    <button onclick="renderDynamicButtons()">Render Dynamic Buttons</button>
+    <div id="dynamicArea"></div>
+    
+    <h2>3. Test CRUD Functions</h2>
+    <button onclick="testCreate()">Test CREATE</button>
+    <button onclick="testRead()">Test READ</button>
+    <button onclick="testUpdate()">Test UPDATE</button>
+    <button onclick="testDelete()">Test DELETE</button>
+    
+    <h2>Log</h2>
+    <div id="log"></div>
+    
+    <script>
+const logDiv = document.getElementById('log');
+let clickCount = 0;
+
+function log(msg) {
+    const entry = document.createElement('div');
+    entry.className = 'entry';
+    entry.textContent = ++clickCount + '. ' + msg;
+    logDiv.prepend(entry);
+    console.log(msg);
+}
+
+async function testDirectCall() {
+    log('Direct call works!');
+}
+
+async function testAuthSystem() {
+    log('authSystem exists: ' + !!window.authSystem);
+    if (window.authSystem) {
+        log('isReady: ' + window.authSystem.isReady());
+    }
+}
+
+function renderDynamicButtons() {
+    const services = window.authSystem ? window.authSystem.getServices() : [];
+    log('Rendering ' + services.length + ' service buttons');
+    
+    const area = document.getElementById('dynamicArea');
+    area.innerHTML = services.slice(0, 3).map(s => 
+        `<button onclick="alert('Clicked: ${s.name}')">${s.name}</button>`
+    ).join('');
+    
+    log('Dynamic buttons rendered');
+}
+
+async function testCreate() {
+    if (!window.authSystem) return log('No authSystem');
+    await window.authSystem.waitForReady();
+    const result = await window.authSystem.addCustomer({
+        email: 'click_test_' + Date.now() + '@test.com',
+        first_name: 'Click',
+        last_name: 'Test',
+        phone: '+254700000000'
+    });
+    log('CREATE: ' + (result.success ? 'SUCCESS' : 'FAILED: ' + JSON.stringify(result)));
+}
+
+async function testRead() {
+    if (!window.authSystem) return log('No authSystem');
+    const customers = window.authSystem.getCustomers();
+    log('READ: Found ' + customers.length + ' customers');
+}
+
+async function testUpdate() {
+    if (!window.authSystem) return log('No authSystem');
+    const customers = window.authSystem.getCustomers();
+    if (customers.length > 0) {
+        const result = await window.authSystem.updateCustomer(customers[0].id, {
+            first_name: 'Updated',
+            last_name: 'Via Click',
+            email: customers[0].email
+        });
+        log('UPDATE: ' + (result.success ? 'SUCCESS' : 'FAILED'));
+    } else {
+        log('UPDATE: No customers to update');
+    }
+}
+
+async function testDelete() {
+    if (!window.authSystem) return log('No authSystem');
+    const customers = window.authSystem.getCustomers();
+    const toDelete = customers.find(c => c.email?.includes('click_test_'));
+    if (toDelete) {
+        const result = await window.authSystem.deleteCustomer(toDelete.id);
+        log('DELETE: ' + (result.success ? 'SUCCESS' : 'FAILED'));
+    } else {
+        log('DELETE: No test customers found');
+    }
+}
+
+log('Page loaded, waiting for authSystem...');
+
+window.addEventListener('load', async () => {
+    await new Promise(r => setTimeout(r, 500));
+    if (window.authSystem) {
+        await window.authSystem.login('admin@traceveilforensics.com', 'admin123');
+        await window.authSystem.waitForReady();
+        log('authSystem ready, functions available');
+    } else {
+        log('authSystem NOT FOUND!');
+    }
+});
+    </script>
+</body>
+</html>

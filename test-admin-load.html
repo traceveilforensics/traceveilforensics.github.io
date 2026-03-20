@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Admin Load</title>
+</head>
+<body>
+    <h1>Test Admin Dashboard Load</h1>
+    <pre id="out" style="background:#1a1a2e; color: #0f0; padding: 20px; max-height: 400px; overflow: auto;"></pre>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    
+    <script>
+        const out = document.getElementById('out');
+        function log(msg, color = '#0f0') {
+            const line = document.createElement('div');
+            line.style.color = color;
+            line.textContent = msg;
+            out.appendChild(line);
+            console.log(msg);
+        }
+        
+        async function loadAdminScript() {
+            log('=== Starting Admin Dashboard Test ===', '#FFD700');
+            
+            await window.authSystem.waitForReady();
+            log('authSystem ready');
+            
+            // Create mock user for testing
+            localStorage.setItem('user', JSON.stringify({
+                id: 'test',
+                email: 'admin@traceveilforensics.com',
+                role: 'admin',
+                first_name: 'Admin'
+            }));
+            log('Mock user set');
+            
+            // Check if functions exist
+            log('\nBefore loading admin script:');
+            log('loadDashboard: ' + (typeof window.loadDashboard));
+            
+            // Fetch the admin script content
+            log('\nFetching admin-dashboard.html...');
+            try {
+                const response = await fetch('admin-dashboard.html');
+                const html = await response.text();
+                
+                // Extract the main script
+                const scripts = html.match(/<script>([\s\S]*?)<\/script>/g);
+                const mainScript = scripts[scripts.length - 1].replace(/<\/?script>/g, '');
+                
+                log('Main script extracted, length: ' + mainScript.length);
+                
+                // Try to execute it
+                log('\nExecuting script...');
+                eval(mainScript);
+                log('Script executed!');
+                
+                log('\nAfter loading:');
+                log('loadDashboard: ' + (typeof window.loadDashboard));
+                log('loadCustomers: ' + (typeof window.loadCustomers));
+                
+                if (typeof window.loadDashboard === 'function') {
+                    log('\nCalling loadDashboard...', '#88ff88');
+                    // Create required elements
+                    if (!document.getElementById('contentArea')) {
+                        const div = document.createElement('div');
+                        div.id = 'contentArea';
+                        document.body.appendChild(div);
+                    }
+                    window.loadDashboard();
+                    log('Done! Content area length: ' + document.getElementById('contentArea').innerHTML.length);
+                }
+                
+            } catch (e) {
+                log('ERROR: ' + e.message, '#ff4444');
+                log(e.stack, '#ff4444');
+            }
+        }
+        
+        setTimeout(loadAdminScript, 500);
+    </script>
+</body>
+</html>

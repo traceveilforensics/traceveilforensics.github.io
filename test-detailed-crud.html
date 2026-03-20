@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Individual CRUD Operations</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        body { background: #0f172a; color: #f1f5f9; font-family: monospace; padding: 20px; }
+        .test { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .pass { background: #065f46; border-left: 4px solid #10b981; }
+        .fail { background: #7f1d1d; border-left: 4px solid #ef4444; }
+        .info { background: #1e3a5f; border-left: 4px solid #3b82f6; }
+        pre { background: #1e293b; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        h2 { color: #ffd700; margin-top: 30px; border-bottom: 1px solid #ffd700; padding-bottom: 10px; }
+        h3 { color: #60a5fa; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Detailed CRUD Test - Each Operation</h1>
+    <div id="results"></div>
+    <script>
+const results = document.getElementById('results');
+let testData = { customerId: null, serviceId: null, pricingId: null, invoiceId: null, reviewId: null, requestId: null };
+
+function log(msg, status = 'info') {
+    const div = document.createElement('div');
+    div.className = 'test ' + status;
+    div.innerHTML = msg;
+    results.appendChild(div);
+    console.log('[' + status.toUpperCase() + ']', msg);
+}
+
+async function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function testCustomer() {
+    log('<h2>=== CUSTOMERS ===</h2>');
+    
+    // Get existing customer
+    const customers = window.authSystem.getCustomers();
+    log('Found ' + customers.length + ' customers');
+    
+    if (customers.length > 0) {
+        const c = customers[0];
+        testData.customerId = c.id;
+        log('Using customer ID: ' + c.id + ' (' + c.email + ')');
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Customer</h3>');
+        const updateResult = await window.authSystem.updateCustomer(c.id, {
+            first_name: 'Updated',
+            last_name: 'Name',
+            email: c.email
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW (getCustomerById)
+        log('<h3>TEST: VIEW Customer (getCustomerById)</h3>');
+        const viewed = window.authSystem.getCustomerById(c.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+        // TEST DELETE
+        log('<h3>TEST: DELETE Customer</h3>');
+        const deleteResult = await window.authSystem.deleteCustomer(c.id);
+        log('DELETE Result: ' + JSON.stringify(deleteResult));
+        
+        // TEST CREATE after delete
+        log('<h3>TEST: CREATE Customer</h3>');
+        const createResult = await window.authSystem.addCustomer({
+            email: 'test_crud_' + Date.now() + '@test.com',
+            first_name: 'Test',
+            last_name: 'Customer',
+            phone: '+254700000000'
+        });
+        log('CREATE Result: ' + JSON.stringify(createResult));
+        
+        if (createResult.success) {
+            const newCustomers = window.authSystem.getCustomers();
+            const newC = newCustomers.find(x => x.email.includes('test_crud_'));
+            testData.customerId = newC ? newC.id : null;
+        }
+    } else {
+        log('No customers to test');
+    }
+}
+
+async function testServices() {
+    log('<h2>=== SERVICES ===</h2>');
+    
+    const services = window.authSystem.getServices();
+    log('Found ' + services.length + ' services');
+    
+    if (services.length > 0) {
+        const s = services[0];
+        testData.serviceId = s.id;
+        log('Using service ID: ' + s.id + ' (' + s.name + ')');
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Service</h3>');
+        const updateResult = await window.authSystem.updateService(s.id, {
+            name: s.name + ' - UPDATED',
+            description: 'Updated description',
+            icon: s.icon,
+            order: s.order,
+            active: s.is_active || s.active
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW
+        log('<h3>TEST: VIEW Service (from cache)</h3>');
+        const services2 = window.authSystem.getServices();
+        const viewed = services2.find(x => x.id === s.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+        // TEST DELETE
+        log('<h3>TEST: DELETE Service</h3>');
+        const deleteResult = await window.authSystem.deleteService(s.id);
+        log('DELETE Result: ' + JSON.stringify(deleteResult));
+        
+        // TEST CREATE
+        log('<h3>TEST: CREATE Service</h3>');
+        const createResult = await window.authSystem.addService({
+            name: 'Test Service ' + Date.now(),
+            slug: 'test-svc-' + Date.now(),
+            icon: 'fa-shield-alt',
+            description: 'Test service',
+            order: 99,
+            active: true
+        });
+        log('CREATE Result: ' + JSON.stringify(createResult));
+        
+        if (createResult.success) {
+            await sleep(500);
+            const newServices = window.authSystem.getServices();
+            const newS = newServices.find(x => x.name.includes('Test Service'));
+            testData.serviceId = newS ? newS.id : null;
+        }
+    } else {
+        log('No services to test');
+    }
+}
+
+async function testPricing() {
+    log('<h2>=== PRICING PLANS ===</h2>');
+    
+    const pricing = window.authSystem.getPricing();
+    log('Found ' + pricing.length + ' pricing plans');
+    
+    if (pricing.length > 0) {
+        const p = pricing[0];
+        testData.pricingId = p.id;
+        log('Using pricing ID: ' + p.id + ' (' + p.name + ')');
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Pricing</h3>');
+        const updateResult = await window.authSystem.updatePricingPlan(p.id, {
+            name: p.name + ' - UPDATED',
+            price: 9999,
+            description: p.description
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW
+        log('<h3>TEST: VIEW Pricing (from cache)</h3>');
+        const pricing2 = window.authSystem.getPricing();
+        const viewed = pricing2.find(x => x.id === p.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+        // TEST DELETE
+        log('<h3>TEST: DELETE Pricing</h3>');
+        const deleteResult = await window.authSystem.deletePricingPlan(p.id);
+        log('DELETE Result: ' + JSON.stringify(deleteResult));
+        
+        // TEST CREATE
+        log('<h3>TEST: CREATE Pricing</h3>');
+        const services = window.authSystem.getServices();
+        const createResult = await window.authSystem.addPricingPlan({
+            service_id: services[0]?.id,
+            name: 'Test Plan ' + Date.now(),
+            price: 999,
+            billing_cycle: 'monthly',
+            description: 'Test',
+            features: ['Feature 1'],
+            active: true
+        });
+        log('CREATE Result: ' + JSON.stringify(createResult));
+        
+        if (createResult.success) {
+            await sleep(500);
+            const newPricing = window.authSystem.getPricing();
+            const newP = newPricing.find(x => x.name.includes('Test Plan'));
+            testData.pricingId = newP ? newP.id : null;
+        }
+    } else {
+        log('No pricing plans to test');
+    }
+}
+
+async function testInvoices() {
+    log('<h2>=== INVOICES ===</h2>');
+    
+    const invoices = window.authSystem.getInvoices();
+    log('Found ' + invoices.length + ' invoices');
+    
+    if (invoices.length > 0) {
+        const inv = invoices[0];
+        testData.invoiceId = inv.id;
+        log('Using invoice ID: ' + inv.id + ' (' + inv.invoice_number + ')');
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Invoice</h3>');
+        const updateResult = await window.authSystem.updateInvoice(inv.id, {
+            status: 'paid'
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW
+        log('<h3>TEST: VIEW Invoice (from cache)</h3>');
+        const invoices2 = window.authSystem.getInvoices();
+        const viewed = invoices2.find(x => x.id === inv.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+        // TEST DELETE
+        log('<h3>TEST: DELETE Invoice</h3>');
+        const deleteResult = await window.authSystem.deleteInvoice(inv.id);
+        log('DELETE Result: ' + JSON.stringify(deleteResult));
+        
+        // TEST CREATE
+        log('<h3>TEST: CREATE Invoice</h3>');
+        const customers = window.authSystem.getCustomers();
+        const createResult = await window.authSystem.addInvoice({
+            customer_id: customers[0]?.id,
+            customer_email: customers[0]?.email || 'test@test.com',
+            customer_name: (customers[0]?.first_name || 'Test') + ' ' + (customers[0]?.last_name || 'Customer'),
+            subtotal: 5000,
+            tax_rate: 0,
+            tax_amount: 0,
+            total: 5000,
+            due_date: '2026-04-20'
+        });
+        log('CREATE Result: ' + JSON.stringify(createResult));
+        
+        if (createResult.success) {
+            await sleep(500);
+            const newInvoices = window.authSystem.getInvoices();
+            const newInv = newInvoices[newInvoices.length - 1];
+            testData.invoiceId = newInv ? newInv.id : null;
+        }
+    } else {
+        log('No invoices to test');
+    }
+}
+
+async function testServiceRequests() {
+    log('<h2>=== SERVICE REQUESTS ===</h2>');
+    
+    const requests = window.authSystem.getServiceRequests();
+    log('Found ' + requests.length + ' service requests');
+    
+    if (requests.length > 0) {
+        const r = requests[0];
+        testData.requestId = r.id;
+        log('Using request ID: ' + r.id);
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Service Request</h3>');
+        const updateResult = await window.authSystem.updateServiceRequest(r.id, {
+            status: 'in_progress',
+            notes: 'Test note from CRUD test'
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW
+        log('<h3>TEST: VIEW Service Request (from cache)</h3>');
+        const requests2 = window.authSystem.getServiceRequests();
+        const viewed = requests2.find(x => x.id === r.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+    } else {
+        log('No service requests to test');
+    }
+}
+
+async function testReviews() {
+    log('<h2>=== REVIEWS ===</h2>');
+    
+    const reviews = window.authSystem.getReviews();
+    log('Found ' + reviews.length + ' reviews');
+    
+    if (reviews.length > 0) {
+        const rv = reviews[0];
+        testData.reviewId = rv.id;
+        log('Using review ID: ' + rv.id);
+        
+        // TEST UPDATE
+        log('<h3>TEST: UPDATE Review</h3>');
+        const updateResult = await window.authSystem.updateReview(rv.id, {
+            is_approved: false
+        });
+        log('UPDATE Result: ' + JSON.stringify(updateResult));
+        
+        // TEST VIEW
+        log('<h3>TEST: VIEW Review (from cache)</h3>');
+        const reviews2 = window.authSystem.getReviews();
+        const viewed = reviews2.find(x => x.id === rv.id);
+        log('VIEW Result: ' + JSON.stringify(viewed));
+        
+        // TEST DELETE
+        log('<h3>TEST: DELETE Review</h3>');
+        const deleteResult = await window.authSystem.deleteReview(rv.id);
+        log('DELETE Result: ' + JSON.stringify(deleteResult));
+        
+    } else {
+        log('No reviews to test');
+    }
+}
+
+async function runAllTests() {
+    // Wait for auth system
+    if (!window.authSystem) {
+        log('authSystem not loaded!', 'fail');
+        return;
+    }
+    
+    await window.authSystem.waitForReady();
+    log('Data loaded from Supabase ✓', 'pass');
+    
+    // Login
+    log('<h2>=== LOGIN ===</h2>');
+    const loginResult = await window.authSystem.login('admin@traceveilforensics.com', 'admin123');
+    if (!loginResult.success) {
+        log('Login failed: ' + loginResult.error, 'fail');
+        return;
+    }
+    log('Logged in as: ' + loginResult.user.email, 'pass');
+    
+    await sleep(500);
+    
+    await testCustomer();
+    await sleep(300);
+    await testServices();
+    await sleep(300);
+    await testPricing();
+    await sleep(300);
+    await testInvoices();
+    await sleep(300);
+    await testServiceRequests();
+    await sleep(300);
+    await testReviews();
+    
+    log('<h2>=== ALL TESTS COMPLETE ===</h2>');
+    log('Check browser console (F12) for detailed network logs');
+    log('Check Supabase dashboard to verify data changes');
+}
+
+setTimeout(runAllTests, 1000);
+    </script>
+</body>
+</html>

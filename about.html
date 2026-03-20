@@ -336,7 +336,7 @@
         function loadTopReviews() {
             getReviews().then(reviews => {
                 const activeReviews = reviews
-                    .filter(r => r.flagged !== true)
+                    .filter(r => r.is_approved === true)
                     .sort((a, b) => b.rating - a.rating)
                     .slice(0, 3);
                 
@@ -508,7 +508,6 @@
 
     <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="auth.js"></script>
     <script src="shared.js"></script>
     <script>
         // Immediate setup

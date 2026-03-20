@@ -8,6 +8,8 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0A1628 0%, #1E3A5F 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -62,11 +64,11 @@
         <form id="loginForm">
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" id="email" placeholder="Enter your email" required>
+                <input type="email" id="email" placeholder="Enter your email" required autocomplete="email">
             </div>
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" id="password" placeholder="Enter your password" required>
+                <input type="password" id="password" placeholder="Enter your password" required autocomplete="current-password">
             </div>
             <div class="form-options">
                 <label class="remember-me"><input type="checkbox" id="remember"> Remember me</label>
@@ -81,7 +83,6 @@
         <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Website</a>
     </div>
 
-    <script src="auth.js"></script>
     <script>
         const form = document.getElementById('loginForm');
         const btn = document.getElementById('loginBtn');
@@ -98,13 +99,11 @@
             errorMsg.classList.remove('show');
             
             try {
-                // Use client-side authentication
-                const result = window.authSystem.login(email, password);
+                const result = await window.authSystem.login(email, password);
                 
                 if (result.success) {
-                    const token = window.authSystem.generateToken();
                     const storage = remember ? localStorage : sessionStorage;
-                    storage.setItem('token', token);
+                    storage.setItem('token', 'supabase-session');
                     storage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
@@ -127,11 +126,12 @@
         });
         
         // Redirect if already logged in
-        if (window.authSystem.isAuthenticated()) {
-            const user = window.authSystem.getCurrentUser();
-            window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
-        }
-        
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.authSystem && window.authSystem.isAuthenticated()) {
+                const user = window.authSystem.getCurrentUser();
+                window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
+            }
+        });
     </script>
 </body>
 </html>

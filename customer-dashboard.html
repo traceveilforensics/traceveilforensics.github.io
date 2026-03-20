@@ -1043,10 +1043,14 @@
             });
         }
 
-        function showPage(page) {
+        async function showPage(page) {
             document.getElementById('pageTitle').textContent = page.charAt(0).toUpperCase() + page.slice(1);
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.querySelector(`.nav-item[data-page="${page}"]`)?.classList.add('active');
+
+            // Reload data from Supabase before showing any page
+            await window.authSystem.init(); // Force reload from Supabase
+            await window.authSystem.waitForReady();
 
             switch(page) {
                 case 'overview':
@@ -1266,57 +1270,19 @@
             `;
         }
 
-        const REVIEWS_KEY = 'customer_reviews';
-
         function getReviews() {
-            let reviews = JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
-            
-            // Add sample reviews if none exist
-            if (reviews.length === 0) {
-                reviews = [
-                    {
-                        id: 1,
-                        customer_email: "customer@traceveilforensics.com",
-                        customer_name: "John Doe",
-                        rating: 5,
-                        title: "Excellent Security Assessment",
-                        content: "Trace Veil Forensics conducted a thorough vulnerability assessment of our network infrastructure. Their team identified critical vulnerabilities that we were unaware of and provided actionable recommendations. The report was detailed and easy to understand. Highly recommended!",
-                        date: new Date().toISOString()
-                    },
-                    {
-                        id: 2,
-                        customer_email: "test@test.com",
-                        customer_name: "Sarah Johnson",
-                        rating: 5,
-                        title: "Professional and Thorough Service",
-                        content: "We hired Trace Veil for a comprehensive security audit of our web applications. The team was professional, knowledgeable, and delivered the report on time. They even provided a follow-up consultation to explain the findings. Great service!",
-                        date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-                    },
-                    {
-                        id: 3,
-                        customer_email: "ariesgemini1st@gmail.com",
-                        customer_name: "Michael Chen",
-                        rating: 4,
-                        title: "Great Security Consultation",
-                        content: "The security assessment exceeded our expectations. The team identified several weaknesses in our system and helped us implement proper security measures. The detailed report helped us improve our overall security posture significantly.",
-                        date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString()
-                    }
-                ];
-                localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
-            }
-            
-            return reviews;
+            return window.authSystem ? window.authSystem.getReviews() : [];
         }
 
-        function saveReviews(reviews) {
-            localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
-        }
-
-        function loadReviews() {
+        async function loadReviews() {
+            await window.authSystem.waitForReady();
+            await window.authSystem.init(); // Force reload from Supabase
+            await window.authSystem.waitForReady();
             const reviews = getReviews();
-            const userEmail = currentUser.email;
             
-            // Show all reviews (not filtered by user)
+            console.log('Reviews loaded:', reviews.length, reviews.map(r => r.customer_name));
+            
+            // Show all approved reviews from Supabase
             const allReviews = reviews;
 
             document.getElementById('contentArea').innerHTML = `
@@ -1334,11 +1300,10 @@
                                     <div class="review-rating">
                                         ${generateStars(review.rating)}
                                     </div>
-                                    <span class="review-date">${new Date(review.date).toLocaleDateString()}</span>
+                                    <span class="review-date">${review.created_at ? new Date(review.created_at).toLocaleDateString() : ''}</span>
                                 </div>
-                                <h4 class="review-title">${review.title}</h4>
-                                <p class="review-text">${review.content}</p>
-                                <p class="review-author" style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">- ${review.customer_name}</p>
+                                <p class="review-text">"${review.comment || review.content || ''}"</p>
+                                <p class="review-author" style="font-size: 12px; color: var(--text-secondary); margin-top: 10px;">- ${review.customer_name || 'Anonymous'}</p>
                             </div>
                         `).join('') : '<div class="empty-state"><i class="fas fa-star"></i><p>No reviews yet. Share your experience with us!</p></div>'}
                     </div>
@@ -1401,7 +1366,7 @@
                 </style>
             `;
 
-            document.getElementById('reviewForm').addEventListener('submit', (e) => {
+            document.getElementById('reviewForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const rating = document.getElementById('ratingInput').value;
@@ -1411,21 +1376,16 @@
                     return;
                 }
 
-                const reviews = getReviews();
-                const newReview = {
-                    id: Date.now(),
+                await window.authSystem.addReview({
                     customer_email: currentUser.email,
                     customer_name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim() || currentUser.email,
                     rating: parseInt(rating),
-                    title: formData.get('title'),
-                    content: formData.get('content'),
-                    date: new Date().toISOString()
-                };
-                
-                reviews.push(newReview);
-                saveReviews(reviews);
+                    comment: formData.get('content') || formData.get('title'),
+                    is_approved: false
+                });
                 
                 closeModal();
+                alert('Thank you! Your review has been submitted and will be visible after approval.');
                 loadReviews();
             });
 
@@ -1484,27 +1444,16 @@
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
 
-                const requests = window.authSystem.getServiceRequests();
                 const newRequest = {
-                    id: Date.now(),
                     customer_id: currentUser.id,
                     customer_name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
                     customer_email: currentUser.email,
-                    customer_phone: currentUser.phone || '',
-                    service_id: 0,
-                    service_name: 'Custom Quote Request',
-                    plan_name: 'Custom',
                     title: data.title,
                     description: data.description + '\n\nBudget: ' + data.budget + '\nTimeline: ' + data.timeline + '\nContact: ' + data.contact_method,
-                    status: 'pending',
-                    priority: 'normal',
-                    notes: 'Custom quote request',
-                    created_date: new Date().toISOString(),
-                    completed_date: null
+                    priority: 'normal'
                 };
                 
-                requests.push(newRequest);
-                window.authSystem.saveServiceRequests(requests);
+                await window.authSystem.addServiceRequest(newRequest);
                 
                 closeModal();
                 showPage('requests');
@@ -1580,12 +1529,8 @@
             document.getElementById('modalBody').innerHTML = `
                 <form id="changePasswordForm">
                     <div class="form-group">
-                        <label>Current Password</label>
-                        <input type="password" name="currentPassword" id="currentPassword" required placeholder="Enter current password">
-                    </div>
-                    <div class="form-group">
                         <label>New Password</label>
-                        <input type="password" name="newPassword" id="newPassword" required placeholder="Enter new password" minlength="8">
+                        <input type="password" name="newPassword" id="newPassword" required placeholder="Enter new password" minlength="6">
                     </div>
                     <div class="form-group">
                         <label>Confirm New Password</label>
@@ -1598,9 +1543,8 @@
                 </form>
             `;
 
-            document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+            document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const currentPassword = document.getElementById('currentPassword').value;
                 const newPassword = document.getElementById('newPassword').value;
                 const confirmPassword = document.getElementById('confirmPassword').value;
 
@@ -1609,59 +1553,19 @@
                     return;
                 }
 
-                if (newPassword.length < 8) {
-                    alert('Password must be at least 8 characters!');
+                if (newPassword.length < 6) {
+                    alert('Password must be at least 6 characters!');
                     return;
                 }
 
-                const userEmail = currentUser.email;
-                let passwordVerified = false;
-                let passwordUpdated = false;
-
-                // Check in customers
-                const customers = window.authSystem.getCustomers();
-                const customerIndex = customers.findIndex(c => c.email.toLowerCase() === userEmail.toLowerCase());
-
-                if (customerIndex !== -1) {
-                    const storedPassword = customers[customerIndex].password;
-                    // If no password set, allow setting one with any current password input
-                    if (!storedPassword || storedPassword === '') {
-                        customers[customerIndex].password = newPassword;
-                        window.authSystem.saveCustomers(customers);
-                        passwordUpdated = true;
-                    } else if (storedPassword === currentPassword) {
-                        passwordVerified = true;
-                        customers[customerIndex].password = newPassword;
-                        window.authSystem.saveCustomers(customers);
-                        passwordUpdated = true;
-                    }
-                }
-
-                // Check in registered_users if not found in customers or password not verified
-                if (!passwordUpdated) {
-                    const users = window.authSystem.getRegisteredUsers();
-                    const registeredUser = Object.keys(users).find(key => key.toLowerCase() === userEmail.toLowerCase());
-                    
-                    if (registeredUser) {
-                        const storedPassword = users[registeredUser].password;
-                        if (!storedPassword || storedPassword === '') {
-                            users[registeredUser].password = newPassword;
-                            localStorage.setItem('registered_users', JSON.stringify(users));
-                            passwordUpdated = true;
-                        } else if (storedPassword === currentPassword) {
-                            users[registeredUser].password = newPassword;
-                            localStorage.setItem('registered_users', JSON.stringify(users));
-                            passwordUpdated = true;
-                        }
-                    }
-                }
-
-                if (passwordUpdated) {
-                    alert('Password changed successfully! Please log in again with your new password.');
+                // Use Supabase Auth to update password
+                const result = await window.authSystem.updatePassword(newPassword);
+                
+                if (result.success) {
+                    alert('Password updated successfully!');
                     closeModal();
-                    logout();
                 } else {
-                    alert('Current password is incorrect!');
+                    alert('Error: ' + result.error);
                 }
             });
 
@@ -1722,32 +1626,16 @@
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
                 
-                const services = window.authSystem.getServices();
-                const pricing = window.authSystem.getPricing();
-                const service = services.find(s => s.id == data.service_id);
-                const plan = pricing.find(p => p.id == data.service_id);
-
-                const requests = window.authSystem.getServiceRequests();
                 const newRequest = {
-                    id: Date.now(),
                     customer_id: currentUser.id,
                     customer_name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
                     customer_email: currentUser.email,
-                    customer_phone: currentUser.phone || '',
-                    service_id: data.service_id,
-                    service_name: service?.name || 'Custom Service',
-                    plan_name: plan?.name || 'Custom',
                     title: data.title,
                     description: data.description,
-                    status: 'pending',
-                    priority: data.priority,
-                    notes: '',
-                    created_date: new Date().toISOString(),
-                    completed_date: null
+                    priority: data.priority
                 };
                 
-                requests.push(newRequest);
-                window.authSystem.saveServiceRequests(requests);
+                await window.authSystem.addServiceRequest(newRequest);
                 
                 closeModal();
                 showPage('requests');
@@ -1796,41 +1684,32 @@
                 const data = Object.fromEntries(formData);
                 const userEmail = currentUser.email;
                 
-                // Update in customers
+                // Update in customers via Supabase
                 const customers = window.authSystem.getCustomers();
-                const customerIndex = customers.findIndex(c => c.email.toLowerCase() === userEmail.toLowerCase());
+                const customer = customers.find(c => c.email.toLowerCase() === userEmail.toLowerCase());
                 
-                if (customerIndex !== -1) {
-                    customers[customerIndex] = {
-                        ...customers[customerIndex],
+                if (customer) {
+                    await window.authSystem.updateCustomer(customer.id, {
                         first_name: data.first_name,
                         last_name: data.last_name,
+                        email: userEmail,
                         phone: data.phone,
                         company_name: data.company_name
-                    };
-                    window.authSystem.saveCustomers(customers);
+                    });
                 }
                 
-                // Update in registered_users if exists
-                const users = window.authSystem.getRegisteredUsers();
-                const registeredUser = Object.keys(users).find(key => key.toLowerCase() === userEmail.toLowerCase());
-                if (registeredUser) {
-                    users[registeredUser] = {
-                        ...users[registeredUser],
-                        first_name: data.first_name,
-                        last_name: data.last_name,
-                        phone: data.phone
-                    };
-                    localStorage.setItem('registered_users', JSON.stringify(users));
-                }
-                
-                // Update current user session
-                const updatedUser = { ...currentUser, ...data };
-                localStorage.setItem('user', JSON.stringify(updatedUser));
-                sessionStorage.setItem('user', JSON.stringify(updatedUser));
-                currentUser = updatedUser;
+                // Update local user
+                currentUser = {
+                    ...currentUser,
+                    first_name: data.first_name,
+                    last_name: data.last_name,
+                    phone: data.phone,
+                    company_name: data.company_name
+                };
+                localStorage.setItem('user', JSON.stringify(currentUser));
                 
                 closeModal();
+                document.getElementById('welcomeText').textContent = `Welcome back, ${currentUser.first_name || currentUser.email}!`;
                 loadProfile();
                 alert('Profile updated successfully!');
             });

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimal Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: Arial; background: #0A1628; color: white; margin: 0; padding: 20px; }
+        .card { background: #1e3a5f; padding: 20px; border-radius: 12px; margin: 10px 0; }
+        .stat { font-size: 32px; color: #FFD700; }
+        h1 { color: #FFD700; }
+    </style>
+</head>
+<body>
+    <h1>Minimal Admin Dashboard</h1>
+    <div id="stats"></div>
+    <div id="customers"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <script>
+        async function init() {
+            console.log('init called');
+            
+            // Wait for data
+            await window.authSystem.waitForReady();
+            console.log('data ready');
+            
+            // Get stats
+            const stats = window.authSystem.getDashboardStats();
+            console.log('stats:', stats);
+            
+            // Display stats
+            document.getElementById('stats').innerHTML = 
+                '<div class="card">' +
+                '<h2>Statistics</h2>' +
+                '<p>Services: <span class="stat">' + window.authSystem.getServices().length + '</span></p>' +
+                '<p>Customers: <span class="stat">' + stats.totalCustomers + '</span></p>' +
+                '<p>Revenue: <span class="stat">KES ' + stats.totalRevenue.toLocaleString() + '</span></p>' +
+                '<p>Invoices: <span class="stat">' + stats.totalInvoices + '</span></p>' +
+                '</div>';
+            
+            // Display customers
+            const customers = window.authSystem.getCustomers();
+            let html = '<div class="card"><h2>Customers (' + customers.length + ')</h2>';
+            customers.forEach(c => {
+                html += '<p>' + (c.company_name || c.email) + '</p>';
+            });
+            html += '</div>';
+            document.getElementById('customers').innerHTML = html;
+        }
+        
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

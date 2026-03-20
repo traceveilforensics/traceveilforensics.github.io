@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CRUD Test</title>
+</head>
+<body>
+    <h1>Supabase CRUD Test</h1>
+    <pre id="out" style="background:#1a1a2e; color: #0f0; padding: 20px; max-height: 600px; overflow: auto;"></pre>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    
+    <script>
+        const out = document.getElementById('out');
+        function log(msg, color = '#0f0') {
+            const line = document.createElement('div');
+            line.style.color = color;
+            line.textContent = msg;
+            out.appendChild(line);
+            console.log(msg);
+        }
+        
+        async function testAll() {
+            log('=== Starting CRUD Tests ===', '#FFD700');
+            
+            await window.authSystem.waitForReady();
+            
+            // 1. READ - Verify data loads
+            log('\n1. READ - Checking data load...', '#FFD700');
+            log('   Services: ' + window.authSystem.getServices().length);
+            log('   Customers: ' + window.authSystem.getCustomers().length);
+            log('   Invoices: ' + window.authSystem.getInvoices().length);
+            log('   Requests: ' + window.authSystem.getServiceRequests().length);
+            log('   Reviews: ' + window.authSystem.getReviews().length);
+            log('   Pricing: ' + window.authSystem.getPricing().length);
+            
+            // 2. CREATE - Test customer add
+            log('\n2. CREATE - Testing addCustomer...', '#FFD700');
+            const testEmail = 'test' + Date.now() + '@example.com';
+            const addResult = await window.authSystem.addCustomer({
+                first_name: 'Test',
+                last_name: 'Customer',
+                email: testEmail,
+                phone: '+254700000000',
+                company_name: 'Test Company Ltd'
+            });
+            log('   addCustomer result: ' + JSON.stringify(addResult));
+            
+            // 3. READ - Verify customer was added
+            log('\n3. READ - Verifying customer added...', '#FFD700');
+            const customers = window.authSystem.getCustomers();
+            const newCustomer = customers.find(c => c.email === testEmail);
+            log('   Found new customer: ' + (newCustomer ? 'YES - ' + newCustomer.first_name + ' ' + newCustomer.last_name : 'NO'));
+            
+            if (newCustomer) {
+                // 4. UPDATE - Test customer update
+                log('\n4. UPDATE - Testing updateCustomer...', '#FFD700');
+                const updateResult = await window.authSystem.updateCustomer(newCustomer.id, {
+                    first_name: 'Updated',
+                    last_name: 'Customer',
+                    email: testEmail,
+                    phone: '+254711111111'
+                });
+                log('   updateCustomer result: ' + JSON.stringify(updateResult));
+                
+                // 5. DELETE - Test customer delete
+                log('\n5. DELETE - Testing deleteCustomer...', '#FFD700');
+                const deleteResult = await window.authSystem.deleteCustomer(newCustomer.id);
+                log('   deleteCustomer result: ' + JSON.stringify(deleteResult));
+            }
+            
+            // 6. INVOICE - Test invoice operations
+            log('\n6. INVOICE - Testing invoice add...', '#FFD700');
+            const invoiceResult = await window.authSystem.addInvoice({
+                customer_email: 'customer@example.com',
+                customer_name: 'Test Customer',
+                subtotal: 1000,
+                tax_rate: 16,
+                tax_amount: 160,
+                total: 1160,
+                due_date: '2026-04-01'
+            });
+            log('   addInvoice result: ' + JSON.stringify(invoiceResult));
+            
+            // 7. SERVICE REQUEST - Test status update
+            const requests = window.authSystem.getServiceRequests();
+            if (requests.length > 0) {
+                log('\n7. SERVICE REQUEST - Testing update...', '#FFD700');
+                const reqResult = await window.authSystem.updateServiceRequest(requests[0].id, {
+                    status: 'in_progress',
+                    notes: 'Test update'
+                });
+                log('   updateServiceRequest result: ' + JSON.stringify(reqResult));
+            }
+            
+            // 8. REVIEW - Test delete
+            const reviews = window.authSystem.getReviews();
+            if (reviews.length > 0) {
+                log('\n8. REVIEW - Testing delete...', '#FFD700');
+                const revResult = await window.authSystem.deleteReview(reviews[0].id);
+                log('   deleteReview result: ' + JSON.stringify(revResult));
+            }
+            
+            log('\n=== All Tests Complete ===', '#FFD700');
+            log('Check results above for errors', '#88ff88');
+        }
+        
+        testAll();
+    </script>
+</body>
+</html>

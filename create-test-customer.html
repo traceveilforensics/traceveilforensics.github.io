@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Test Customer</title>
+    <script src="auth.js"></script>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .info { color: #ff0; }
+    </style>
+</head>
+<body>
+    <h1>Create Test Customer</h1>
+    <pre id="output"></pre>
+    <script>
+const out = document.getElementById('output');
+function log(msg, type = 'info') {
+    out.innerHTML += `<span class="${type}">${msg}</span>\n`;
+    console.log(msg);
+}
+
+async function createTestCustomer() {
+    log('Creating test customer in localStorage...');
+    
+    // Create fake customer data
+    const customerData = {
+        id: 'cust-' + Date.now(),
+        email: 'customer@traceveil.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        phone: '+254700000000',
+        role: 'customer'
+    };
+    
+    // Store in localStorage
+    localStorage.setItem('user', JSON.stringify(customerData));
+    localStorage.setItem('token', 'fake-token-for-testing');
+    localStorage.setItem('loginTime', Date.now().toString());
+    
+    log('Customer created: ' + JSON.stringify(customerData, null, 2), 'success');
+    log('');
+    log('You can now login at: http://localhost:3000/customer-dashboard.html', 'info');
+}
+
+setTimeout(createTestCustomer, 500);
+    </script>
+</body>
+</html>

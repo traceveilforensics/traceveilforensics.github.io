@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Admin</title>
+    <script src="auth.js"></script>
+</head>
+<body>
+<h1>Debug Admin Panel</h1>
+<pre id="output" style="background:#000;color:#0f0;padding:20px;font-size:12px;"></pre>
+<script>
+const out = document.getElementById('output');
+function log(msg) {
+    out.textContent += msg + '\n';
+    console.log(msg);
+}
+
+async function run() {
+    log('1. authSystem exists: ' + !!window.authSystem);
+    
+    if (!window.authSystem) {
+        log('ERROR: authSystem not loaded!');
+        return;
+    }
+    
+    log('2. Waiting for ready...');
+    await window.authSystem.waitForReady();
+    log('3. isReady: ' + window.authSystem.isReady());
+    
+    log('4. Fetching data...');
+    const stats = window.authSystem.getDashboardStats();
+    log('Stats: ' + JSON.stringify(stats, null, 2));
+    
+    log('5. Services: ' + window.authSystem.getServices().length);
+    log('6. Customers: ' + window.authSystem.getCustomers().length);
+    log('7. Invoices: ' + window.authSystem.getInvoices().length);
+    
+    log('8. Checking stored user...');
+    const user = window.authSystem.getStoredUser();
+    log('User: ' + JSON.stringify(user));
+    
+    if (user && user.role === 'admin') {
+        log('9. User is admin - dashboard should show content');
+    } else {
+        log('9. No admin user stored - redirecting to login');
+        // window.location.href = 'admin-login.html';
+    }
+}
+
+setTimeout(run, 500);
+</script>
+</body>
+</html>

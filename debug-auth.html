@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head><title>Debug Auth</title></head>
+<body>
+<h1>Debug Auth</h1>
+<pre id="output"></pre>
+<script src="auth.js"></script>
+<script>
+const out = document.getElementById('output');
+
+function log(msg) {
+    out.textContent += msg + '\n';
+    console.log(msg);
+}
+
+window.addEventListener('load', async () => {
+    log('Page loaded');
+    log('authSystem exists: ' + !!window.authSystem);
+    
+    if (window.authSystem) {
+        await window.authSystem.waitForReady();
+        log('Ready: ' + window.authSystem.isReady());
+        
+        const stats = window.authSystem.getDashboardStats();
+        log('Stats: ' + JSON.stringify(stats, null, 2));
+        
+        const services = window.authSystem.getServices();
+        log('Services count: ' + services.length);
+    } else {
+        log('authSystem not found!');
+    }
+});
+</script>
+</body>
+</html>

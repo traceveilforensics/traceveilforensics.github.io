@@ -1608,25 +1608,48 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            init();
+            console.log('DOM loaded, starting init...');
+            init().catch(e => console.error('Init error:', e));
         });
 
         let initialized = false;
         
         async function init() {
-            if (initialized) return;
+            console.log('init() called');
+            if (initialized) {
+                console.log('Already initialized, skipping');
+                return;
+            }
+            
+            // Wait for authSystem
+            console.log('Waiting for authSystem...');
+            let attempts = 0;
+            while (!window.authSystem && attempts < 50) {
+                await new Promise(r => setTimeout(r, 100));
+                attempts++;
+            }
+            console.log('authSystem available:', !!window.authSystem);
+            
+            if (!window.authSystem) {
+                console.error('authSystem not loaded!');
+                document.getElementById('contentArea').innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;"><p>Error: Authentication system failed to load. Please refresh the page.</p></div>';
+                return;
+            }
+            
             initialized = true;
             
             // Check if user exists in localStorage
             const user = window.authSystem.getStoredUser();
+            console.log('User:', user);
+            
             if (!user) {
+                console.log('No user, redirecting to login');
                 window.location.href = 'admin-login.html';
                 return;
             }
             
             // Check if admin
             if (user.role !== 'admin') {
-                // Show message but don't redirect
                 document.getElementById('contentArea').innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;"><p>You are logged in as ' + user.email + ' but not as admin.</p><a href="admin-login.html">Login as admin</a></div>';
                 return;
             }
@@ -1640,7 +1663,9 @@
             document.getElementById('userAvatar').textContent = firstName.charAt(0).toUpperCase();
 
             // Wait for data to be ready
+            console.log('Waiting for data...');
             await window.authSystem.waitForReady();
+            console.log('Data ready, loading dashboard...');
             
             // Setup navigation
             setupNavigation();
@@ -1648,6 +1673,7 @@
             // Load initial data
             loadDashboard();
             updateBadges();
+            console.log('Dashboard loaded');
         }
 
         function setupNavigation() {
@@ -1927,7 +1953,7 @@
                     </div>
                     <div class="form-group toggle-group">
                         <label class="toggle-switch">
-                            <input type="checkbox" id="serviceActive" ${service ? (service.active ? 'checked' : '') : 'checked'}>
+                            <input type="checkbox" id="serviceActive" ${service ? (service.is_active ? 'checked' : '') : 'checked'}>
                             <span class="toggle-slider"></span>
                         </label>
                         <label class="form-label" style="margin-bottom: 0;">Service Active Status</label>
@@ -1937,7 +1963,7 @@
 
             document.getElementById('modalFooter').innerHTML = `
                 <button class="btn btn-secondary" onclick="closeModal()" style="padding: 14px 28px;">Cancel</button>
-                <button class="btn btn-primary" onclick="saveService(${service ? service.id : 'null'})" style="padding: 14px 28px;">${isEdit ? 'Update Service' : 'Create Service'}</button>
+                <button class="btn btn-primary" onclick="saveService('${service ? service.id : ''}')" style="padding: 14px 28px;">${isEdit ? 'Update Service' : 'Create Service'}</button>
             `;
 
             document.getElementById('modalOverlay').classList.add('active');
@@ -1949,44 +1975,40 @@
             if (service) openServiceModal(service);
         }
 
-        function saveService(id) {
-            const services = window.authSystem.getServices();
-            
+        async function saveService(id) {
             const serviceData = {
                 name: document.getElementById('serviceName').value,
                 slug: document.getElementById('serviceSlug').value,
                 icon: document.getElementById('serviceIcon').value,
-                order: parseInt(document.getElementById('serviceOrder').value),
                 description: document.getElementById('serviceDescription').value,
-                active: document.getElementById('serviceActive').checked
+                is_active: document.getElementById('serviceActive').checked
             };
 
-            if (id) {
-                // Update existing
-                const index = services.findIndex(s => s.id == id);
-                if (index !== -1) {
-                    services[index] = { ...services[index], ...serviceData };
+            try {
+                if (id) {
+                    await window.authSystem.updateService(id, serviceData);
                     showToast('Service updated successfully!', 'success');
+                } else {
+                    await window.authSystem.addService(serviceData);
+                    showToast('Service created successfully!', 'success');
                 }
-            } else {
-                // Add new
-                serviceData.id = Date.now();
-                services.push(serviceData);
-                showToast('Service created successfully!', 'success');
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
-
-            window.authSystem.saveServices(services);
+            
             closeModal();
             loadServices();
         }
 
-        function deleteService(id) {
+        async function deleteService(id) {
             if (confirm('Are you sure you want to delete this service?')) {
-                let services = window.authSystem.getServices();
-                services = services.filter(s => s.id != id);
-                window.authSystem.saveServices(services);
-                showToast('Service deleted!', 'success');
-                loadServices();
+                try {
+                    await window.authSystem.deleteService(id);
+                    showToast('Service deleted!', 'success');
+                    loadServices();
+                } catch (e) {
+                    showToast('Error: ' + e.message, 'error');
+                }
             }
         }
 
@@ -2030,13 +2052,13 @@
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
                             ${group.plans.length ? group.plans.map(plan => `
-                                <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 2px solid ${plan.active ? 'rgba(255,215,0,0.3)' : '#334155'}; border-radius: 16px; padding: 24px; transition: all 0.3s;">
+                                <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 2px solid ${plan.is_active ? 'rgba(255,215,0,0.3)' : '#334155'}; border-radius: 16px; padding: 24px; transition: all 0.3s;">
                                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                                         <div>
                                             <h4 style="color: #ffffff; font-size: 18px; font-weight: 700; margin-bottom: 4px;">${plan.name}</h4>
                                             <span style="background: ${plan.billing_cycle === 'monthly' ? 'rgba(59,130,246,0.2)' : 'rgba(16,185,129,0.2)'}; color: ${plan.billing_cycle === 'monthly' ? '#60a5fa' : '#34d399'}; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">${plan.billing_cycle === 'monthly' ? 'Monthly' : 'One Time'}</span>
                                         </div>
-                                        <span class="status-badge ${plan.active ? 'status-paid' : 'status-cancelled'}" style="font-size: 11px;">${plan.active ? 'Active' : 'Inactive'}</span>
+                                        <span class="status-badge ${plan.is_active ? 'status-paid' : 'status-cancelled'}" style="font-size: 11px;">${plan.is_active ? 'Active' : 'Inactive'}</span>
                                     </div>
                                     <div style="margin-bottom: 16px;">
                                         <span style="color: #FFD700; font-size: 32px; font-weight: 800;">KES ${parseFloat(plan.price).toLocaleString()}</span>
@@ -2114,7 +2136,7 @@
                     <div class="form-group">
                         <label class="form-label">Active</label>
                         <label class="toggle-switch">
-                            <input type="checkbox" id="pricingActive" ${plan ? (plan.active ? 'checked' : '') : 'checked'}>
+                            <input type="checkbox" id="pricingActive" ${plan ? (plan.is_active ? 'checked' : '') : 'checked'}>
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
@@ -2123,7 +2145,7 @@
 
             document.getElementById('modalFooter').innerHTML = `
                 <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" onclick="savePricing(${plan ? plan.id : 'null'})">${isEdit ? 'Update' : 'Create'} Plan</button>
+                <button class="btn btn-primary" onclick="savePricing('${plan ? plan.id : ''}')">${isEdit ? 'Update' : 'Create'} Plan</button>
             `;
 
             document.getElementById('modalOverlay').classList.add('active');
@@ -2135,45 +2157,53 @@
             if (plan) openPricingModal(plan);
         }
 
-        function savePricing(id) {
-            const pricing = window.authSystem.getPricing();
-            
+        async function savePricing(id) {
             const features = document.getElementById('pricingFeatures').value.split('\n').filter(f => f.trim());
             
             const planData = {
-                service_id: parseInt(document.getElementById('pricingService').value),
+                service_id: document.getElementById('pricingService').value || null,
                 name: document.getElementById('pricingName').value,
                 price: parseFloat(document.getElementById('pricingPrice').value),
                 billing_cycle: document.getElementById('pricingCycle').value,
                 description: document.getElementById('pricingDescription').value,
                 features: features,
-                active: document.getElementById('pricingActive').checked
+                is_active: document.getElementById('pricingActive').checked
             };
+            
+            console.log('savePricing called with id:', id);
+            console.log('planData:', planData);
 
-            if (id) {
-                const index = pricing.findIndex(p => p.id == id);
-                if (index !== -1) {
-                    pricing[index] = { ...pricing[index], ...planData };
-                    showToast('Pricing plan updated!', 'success');
+            try {
+                if (id) {
+                    const result = await window.authSystem.updatePricingPlan(id, planData);
+                    console.log('Update result:', result);
+                    if (result.success) {
+                        showToast('Pricing plan updated!', 'success');
+                    } else {
+                        showToast('Update failed: ' + result.error, 'error');
+                    }
+                } else {
+                    await window.authSystem.addPricingPlan(planData);
+                    showToast('Pricing plan created!', 'success');
                 }
-            } else {
-                planData.id = Date.now();
-                pricing.push(planData);
-                showToast('Pricing plan created!', 'success');
+            } catch (e) {
+                console.error('Save pricing error:', e);
+                showToast('Error: ' + e.message, 'error');
             }
-
-            window.authSystem.savePricing(pricing);
+            
             closeModal();
             loadPricing();
         }
 
-        function deletePricing(id) {
+        async function deletePricing(id) {
             if (confirm('Are you sure you want to delete this pricing plan?')) {
-                let pricing = window.authSystem.getPricing();
-                pricing = pricing.filter(p => p.id != id);
-                window.authSystem.savePricing(pricing);
-                showToast('Pricing plan deleted!', 'success');
-                loadPricing();
+                try {
+                    await window.authSystem.deletePricingPlan(id);
+                    showToast('Pricing plan deleted!', 'success');
+                    loadPricing();
+                } catch (e) {
+                    showToast('Error: ' + e.message, 'error');
+                }
             }
         }
 
@@ -2390,7 +2420,7 @@
             document.getElementById('invoiceTotal').textContent = 'KES ' + total.toLocaleString();
         }
 
-        function saveInvoice() {
+        async function saveInvoice() {
             const invoices = window.authSystem.getInvoices();
             const customers = window.authSystem.getCustomers();
             const demoCustomers = [
@@ -2426,26 +2456,26 @@
                 return;
             }
 
-            const newInvoice = {
-                id: Date.now(),
-                invoice_number: window.authSystem.generateInvoiceNumber(),
-                customer_id: customerId,
-                customer_name: selectedOption.dataset.name,
-                customer_email: selectedOption.dataset.email,
-                items: items,
-                subtotal: subtotal,
-                tax: 0,
-                total: subtotal,
-                status: 'sent',
-                created_date: new Date().toISOString().split('T')[0],
-                due_date: document.getElementById('invoiceDueDate').value,
-                paid_date: null
-            };
-
-            invoices.push(newInvoice);
-            window.authSystem.saveInvoices(invoices);
+            const taxRate = 0;
+            const taxAmount = 0;
+            
+            try {
+                await window.authSystem.addInvoice({
+                    customer_id: customerId,
+                    customer_email: selectedOption.dataset.email,
+                    customer_name: selectedOption.dataset.name,
+                    subtotal: subtotal,
+                    tax_rate: taxRate,
+                    tax_amount: taxAmount,
+                    total: subtotal,
+                    due_date: document.getElementById('invoiceDueDate').value
+                });
+                showToast('Invoice created successfully!', 'success');
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+            
             closeModal();
-            showToast('Invoice created successfully!', 'success');
             loadInvoices();
             updateBadges();
         }
@@ -2492,7 +2522,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${invoice.items.map(item => `
+                            ${(invoice.items || []).map(item => `
                                 <tr>
                                     <td>${item.description}</td>
                                     <td>${item.quantity}</td>
@@ -2615,7 +2645,7 @@
                             td { color: black; }
                             .status { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                         }
-                    </style>
+                    <\/style>
                 </head>
                 <body>
                     <div class="invoice-container">
@@ -2650,7 +2680,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${invoice.items.map(item => `
+                                ${(invoice.items || []).map(item => `
                                     <tr>
                                         <td>${item.description}</td>
                                         <td>${item.quantity}</td>
@@ -2679,7 +2709,8 @@
 
             document.getElementById('modalTitle').textContent = `Edit Invoice ${invoice.invoice_number}`;
             
-            const itemsHtml = invoice.items.map((item, idx) => `
+            const items = invoice.items || [];
+            const itemsHtml = items.map((item, idx) => `
                 <div class="form-row" style="margin-bottom: 10px;" id="editItemRow${idx}">
                     <input type="text" class="form-input" placeholder="Description" id="editItemDesc${idx}" value="${item.description}">
                     <input type="number" class="form-input" placeholder="Qty" id="editItemQty${idx}" value="${item.quantity}" min="1" style="width: 80px;" onchange="calcEditItemTotal(${idx})">
@@ -2718,10 +2749,10 @@
                         <div id="editInvoiceItems">
                             ${itemsHtml}
                         </div>
-                        <input type="hidden" id="editItemCount" value="${invoice.items.length}">
+                        <input type="hidden" id="editItemCount" value="${items.length}">
                     </div>
                     <div class="form-group" style="text-align: right;">
-                        <h3 style="color: #FFD700;">Total: <span id="editInvoiceTotal">KES ${parseFloat(invoice.total).toLocaleString()}</span></h3>
+                        <h3 style="color: #FFD700;">Total: <span id="editInvoiceTotal">KES ${parseFloat(invoice.total || 0).toLocaleString()}</span></h3>
                     </div>
                 </div>
             `;
@@ -2775,10 +2806,10 @@
             document.getElementById('editInvoiceTotal').textContent = `KES ${grandTotal.toLocaleString()}`;
         }
 
-        function updateInvoiceFull(id) {
+        async function updateInvoiceFull(id) {
             const invoices = window.authSystem.getInvoices();
-            const index = invoices.findIndex(i => i.id == id);
-            if (index === -1) return;
+            const invoice = invoices.find(i => i.id == id);
+            if (!invoice) return;
 
             const count = parseInt(document.getElementById('editItemCount').value);
             const items = [];
@@ -2806,34 +2837,34 @@
 
             const total = items.reduce((sum, item) => sum + item.total, 0);
             const newStatus = document.getElementById('newInvoiceStatus').value;
+            const paid_date = newStatus === 'paid' ? new Date().toISOString().split('T')[0] : invoice.paid_date;
             
-            invoices[index] = {
-                ...invoices[index],
-                status: newStatus,
-                due_date: document.getElementById('editInvoiceDueDate').value,
-                items: items,
-                total: total
-            };
-
-            if (newStatus === 'paid' && !invoices[index].paid_date) {
-                invoices[index].paid_date = new Date().toISOString().split('T')[0];
+            try {
+                await window.authSystem.updateInvoice(id, {
+                    status: newStatus,
+                    due_date: document.getElementById('editInvoiceDueDate').value,
+                    paid_date: paid_date
+                });
+                showToast('Invoice updated successfully!', 'success');
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
-
-            window.authSystem.saveInvoices(invoices);
+            
             closeModal();
-            showToast('Invoice updated successfully!', 'success');
             loadInvoices();
             updateBadges();
         }
 
-        function deleteInvoice(id) {
+        async function deleteInvoice(id) {
             if (confirm('Are you sure you want to delete this invoice?')) {
-                let invoices = window.authSystem.getInvoices();
-                invoices = invoices.filter(i => i.id != id);
-                window.authSystem.saveInvoices(invoices);
-                showToast('Invoice deleted!', 'success');
-                loadInvoices();
-                updateBadges();
+                try {
+                    await window.authSystem.deleteInvoice(id);
+                    showToast('Invoice deleted!', 'success');
+                    loadInvoices();
+                    updateBadges();
+                } catch (e) {
+                    showToast('Error: ' + e.message, 'error');
+                }
             }
         }
 
@@ -3009,20 +3040,18 @@
             document.getElementById('modalOverlay').classList.add('active');
         }
 
-        function updateRequestStatus(id) {
-            const requests = window.authSystem.getServiceRequests();
-            const index = requests.findIndex(r => r.id == id);
-            if (index !== -1) {
-                requests[index].status = document.getElementById('newRequestStatus').value;
-                requests[index].notes = document.getElementById('requestNotes').value;
-                if (requests[index].status === 'completed') {
-                    requests[index].completed_date = new Date().toISOString().split('T')[0];
-                }
-                window.authSystem.saveServiceRequests(requests);
+        async function updateRequestStatus(id) {
+            try {
+                await window.authSystem.updateServiceRequest(id, {
+                    status: document.getElementById('newRequestStatus').value,
+                    notes: document.getElementById('requestNotes').value
+                });
                 closeModal();
                 showToast('Request status updated!', 'success');
                 loadRequests();
                 updateBadges();
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
@@ -3172,18 +3201,30 @@
 
             document.getElementById('modalFooter').innerHTML = `
                 <button class="btn btn-secondary" onclick="closeModal()" style="padding: 14px 28px;">Cancel</button>
-                <button class="btn btn-primary" onclick="saveCustomer(${customer ? customer.id : 'null'})" style="padding: 14px 28px; background: linear-gradient(135deg, #FFD700, #e6c200); color: #0a1628;">${isEdit ? 'Update Customer' : 'Add Customer'}</button>
+                <button class="btn btn-primary" id="saveCustomerBtn" style="padding: 14px 28px; background: linear-gradient(135deg, #FFD700, #e6c200); color: #0a1628;">${isEdit ? 'Update Customer' : 'Add Customer'}</button>
             `;
+            
+            document.getElementById('saveCustomerBtn').addEventListener('click', () => saveCustomer(customer ? customer.id : null));
 
             document.getElementById('modalOverlay').classList.add('active');
         }
 
         function viewCustomer(id) {
             const customer = window.authSystem.getCustomerById(id);
-            if (!customer) return;
+            if (!customer) {
+                console.error('Customer not found:', id);
+                alert('Customer not found');
+                return;
+            }
 
-            const invoices = window.authSystem.getInvoices().filter(i => i.customer_email === customer.email);
-            const requests = window.authSystem.getServiceRequests().filter(r => r.customer_email === customer.email);
+            const customerEmail = customer.email || customerEmail;
+            const invoices = window.authSystem.getInvoices().filter(i => i.customer_email === customerEmail);
+            const requests = window.authSystem.getServiceRequests().filter(r => r.customer_email === customerEmail);
+
+            const displayName = customer.first_name && customer.last_name 
+                ? customer.first_name + ' ' + customer.last_name 
+                : customer.company_name || customerEmail || 'Customer';
+            const initials = (customer.first_name?.charAt(0) || customer.company_name?.charAt(0) || 'C').toUpperCase();
 
             document.getElementById('modalTitle').textContent = 'Customer Details';
             document.querySelector('.modal').classList.remove('modal-large', 'modal-small');
@@ -3191,26 +3232,26 @@
 
             document.getElementById('modalBody').innerHTML = `
                 <div style="display: flex; gap: 30px; flex-wrap: wrap;">
-                    <!-- Customer Info Card -->
                     <div style="flex: 1; min-width: 280px;">
                         <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 20px;">
                             <div style="width: 100px; height: 100px; background: linear-gradient(135deg, #FFD700, #e6c200); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #0a1628; font-weight: 700; font-size: 36px; margin: 0 auto 15px;">
-                                ${customer.first_name.charAt(0)}${customer.last_name ? customer.last_name.charAt(0) : ''}
+                                ${initials}
                             </div>
-                            <h3 style="color: #ffffff; font-size: 24px;">${customer.first_name} ${customer.last_name}</h3>
+                            <h3 style="color: #ffffff; font-size: 24px;">${displayName}</h3>
                             <p style="color: #64748b;">ID: ${customer.id}</p>
                         </div>
                         
                         <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 16px; padding: 20px;">
                             <h4 style="color: #FFD700; margin-bottom: 15px; font-size: 14px;"><i class="fas fa-user"></i> Contact Information</h4>
                             <p style="color: #94a3b8; font-size: 13px; margin-bottom: 5px;">Email</p>
-                            <p style="color: #ffffff; margin-bottom: 15px;">${customer.email}</p>
+                            <p style="color: #ffffff; margin-bottom: 15px;">${customerEmail || 'N/A'}</p>
                             <p style="color: #94a3b8; font-size: 13px; margin-bottom: 5px;">Phone</p>
                             <p style="color: #ffffff;">${customer.phone || 'Not provided'}</p>
+                            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 5px; margin-top: 15px;">Company</p>
+                            <p style="color: #ffffff;">${customer.company_name || 'N/A'}</p>
                         </div>
                     </div>
                     
-                    <!-- Stats & Actions -->
                     <div style="flex: 1; min-width: 280px;">
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
                             <div style="background: linear-gradient(135deg, #0d1f35 0%, #1e3a5f 100%); border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center;">
@@ -3229,19 +3270,10 @@
                         </div>
                         
                         <div style="display: flex; flex-direction: column; gap: 10px;">
-                            <button onclick="exportSingleCustomer(${customer.id})" style="background: rgba(139,92,246,0.1); border: 1px solid #8b5cf6; color: #8b5cf6; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                                <i class="fas fa-download"></i> Export Customer
-                            </button>
-                            <button onclick="resetCustomerPassword('${customer.email}')" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: white; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                                <i class="fas fa-key"></i> Reset Password
-                            </button>
-                            <button onclick="closeModal(); setTimeout(() => editCustomer(${customer.id}), 100);" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            <button onclick="closeModal(); setTimeout(() => editCustomer('${customer.id}'), 100);" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
                                 <i class="fas fa-edit"></i> Edit Customer
                             </button>
-                            <button onclick="closeModal(); setTimeout(() => { showPage('invoices'); setTimeout(() => openInvoiceModalForCustomer('${customer.email}'), 300); }, 100);" style="background: rgba(139,92,246,0.1); border: 1px solid #8b5cf6; color: #8b5cf6; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                                <i class="fas fa-file-invoice"></i> Create Invoice
-                            </button>
-                            <button onclick="deleteCustomer(${customer.id}); closeModal();" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            <button onclick="deleteCustomer('${customer.id}'); closeModal();" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
                                 <i class="fas fa-trash"></i> Delete Customer
                             </button>
                         </div>
@@ -3256,10 +3288,15 @@
 
         function editCustomer(id) {
             const customer = window.authSystem.getCustomerById(id);
-            if (customer) openCustomerModal(customer);
+            if (!customer) {
+                console.error('Customer not found for edit:', id);
+                alert('Customer not found');
+                return;
+            }
+            openCustomerModal(customer);
         }
 
-        function saveCustomer(id) {
+        async function saveCustomer(id) {
             const firstName = document.getElementById('customerFirstName').value;
             const lastName = document.getElementById('customerLastName').value;
             const email = document.getElementById('customerEmail').value;
@@ -3271,70 +3308,56 @@
                 return;
             }
 
-            if (id) {
-                const customerData = { first_name: firstName, last_name: lastName, email: email, phone: phone };
-                if (newPassword) {
-                    customerData.password = newPassword;
+            try {
+                if (id) {
+                    const customerData = { first_name: firstName, last_name: lastName, email: email, phone: phone };
+                    await window.authSystem.updateCustomer(id, customerData);
+                    
+                    // Update password if provided
+                    if (newPassword && newPassword.length >= 6) {
+                        await window.authSystem.resetCustomerPassword(email);
+                        showToast('Customer updated! Password reset email sent to ' + email, 'success');
+                    } else {
+                        showToast('Customer updated!', 'success');
+                    }
+                } else {
+                    if (!newPassword || newPassword.length < 6) {
+                        showToast('Please enter a password (min 6 characters)', 'error');
+                        return;
+                    }
+                    await window.authSystem.addCustomer({ first_name: firstName, last_name: lastName, email: email, phone: phone, password: newPassword });
+                    showToast('Customer added!', 'success');
                 }
-                window.authSystem.updateCustomer(id, customerData);
-                showToast('Customer updated!', 'success');
-            } else {
-                const password = newPassword || Math.random().toString(36).slice(-8);
-                window.authSystem.addCustomer({ first_name: firstName, last_name: lastName, email: email, phone: phone, password: password });
-                showToast('Customer added!', 'success');
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
             
             closeModal();
             loadCustomers();
         }
 
-        function deleteCustomer(id) {
+        async function deleteCustomer(id) {
             if (confirm('Are you sure you want to delete this customer?')) {
-                window.authSystem.deleteCustomer(id);
-                showToast('Customer deleted!', 'success');
-                loadCustomers();
+                try {
+                    await window.authSystem.deleteCustomer(id);
+                    showToast('Customer deleted!', 'success');
+                    loadCustomers();
+                } catch (e) {
+                    showToast('Error: ' + e.message, 'error');
+                }
             }
         }
 
-        function resetCustomerPassword(email) {
-            const result = window.authSystem.requestPasswordReset(email);
-            if (result.success) {
-                const codes = JSON.parse(localStorage.getItem('password_reset_codes') || '{}');
-                const codeData = codes[email];
-                
-                if (codeData) {
-                    document.getElementById('modalTitle').textContent = 'Password Reset Code';
-                    document.querySelector('.modal').classList.remove('modal-large', 'modal-small');
-                    document.querySelector('.modal').classList.add('modal-small');
-                    
-                    document.getElementById('modalBody').innerHTML = `
-                        <div style="text-align: center; padding: 10px;">
-                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #FFD700, #e6c200); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                                <i class="fas fa-key" style="color: #0a1628; font-size: 36px;"></i>
-                            </div>
-                            <h3 style="color: #ffffff; margin-bottom: 10px; font-size: 20px;">Reset Code Generated</h3>
-                            <p style="color: #94a3b8; margin-bottom: 20px; font-size: 14px;">Share this code with <strong>${email}</strong>:</p>
-                            <div style="background: #0f172a; padding: 25px; border-radius: 16px; border: 3px solid #FFD700; margin-bottom: 15px;">
-                                <p style="color: #FFD700; font-size: 42px; font-weight: 800; letter-spacing: 12px; font-family: monospace;">${codeData.code}</p>
-                            </div>
-                            <p style="color: #64748b; font-size: 12px;">Code expires in 30 minutes</p>
-                            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px;">
-                                <button onclick="copyToClipboard('${codeData.code}')" style="background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; color: white; padding: 14px 28px; border-radius: 10px; cursor: pointer; font-weight: 600;">
-                                    <i class="fas fa-copy"></i> Copy Code
-                                </button>
-                                <button onclick="sendCodeViaEmail('${email}', '${codeData.code}')" style="background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; padding: 14px 28px; border-radius: 10px; cursor: pointer; font-weight: 600;">
-                                    <i class="fas fa-envelope"></i> Send via Email
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    document.getElementById('modalFooter').innerHTML = `
-                        <button class="btn btn-secondary" onclick="closeModal()">Close</button>
-                    `;
-                    document.getElementById('modalOverlay').classList.add('active');
+        async function resetCustomerPassword(email) {
+            try {
+                const result = await window.authSystem.resetCustomerPassword(email);
+                if (result.success) {
+                    showToast('Password reset email sent to ' + email, 'success');
+                } else {
+                    showToast('Error: ' + result.error, 'error');
                 }
-            } else {
-                showToast(result.error, 'error');
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
@@ -3469,20 +3492,10 @@
         }
 
         // ============ REVIEWS ============
-        const REVIEWS_KEY = 'customer_reviews';
-
-        function getAdminReviews() {
-            return JSON.parse(localStorage.getItem(REVIEWS_KEY) || '[]');
-        }
-
-        function saveAdminReviews(reviews) {
-            localStorage.setItem(REVIEWS_KEY, JSON.stringify(reviews));
-        }
-
         function loadAdminReviews() {
             const reviews = window.authSystem.getReviews();
-            const activeReviews = reviews.filter(r => r.flagged !== true);
-            const flaggedReviews = reviews.filter(r => r.flagged === true);
+            const activeReviews = reviews.filter(r => r.is_approved === true);
+            const flaggedReviews = reviews.filter(r => r.is_approved !== true);
 
             document.getElementById('contentArea').innerHTML = `
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -3540,32 +3553,32 @@
             `;
         }
 
-        function flagReview(id) {
-            const reviews = window.authSystem.getReviews();
-            const review = reviews.find(r => r.id === id);
-            if (review) {
-                review.flagged = true;
-                window.authSystem.saveReviews(reviews);
+        async function flagReview(id) {
+            try {
+                await window.authSystem.updateReview(id, { flagged: true });
                 loadAdminReviews();
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
-        function unflagReview(id) {
-            const reviews = window.authSystem.getReviews();
-            const review = reviews.find(r => r.id === id);
-            if (review) {
-                review.flagged = false;
-                window.authSystem.saveReviews(reviews);
+        async function unflagReview(id) {
+            try {
+                await window.authSystem.updateReview(id, { flagged: false });
                 loadAdminReviews();
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
             }
         }
 
-        function deleteReview(id) {
+        async function deleteReview(id) {
             if (confirm('Are you sure you want to delete this review?')) {
-                const reviews = window.authSystem.getReviews();
-                const filtered = reviews.filter(r => r.id !== id);
-                window.authSystem.saveReviews(filtered);
-                loadAdminReviews();
+                try {
+                    await window.authSystem.deleteReview(id);
+                    loadAdminReviews();
+                } catch (e) {
+                    showToast('Error: ' + e.message, 'error');
+                }
             }
         }
 

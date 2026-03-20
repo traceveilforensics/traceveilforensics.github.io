@@ -7,9 +7,10 @@
     <title>Register | Trace Veil Forensics</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
     <style>
         .auth-container {
             min-height: 100vh;
@@ -188,22 +189,22 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="firstName">First Name *</label>
-                        <input type="text" id="firstName" name="firstName" required placeholder="John">
+                        <input type="text" id="firstName" name="firstName" required placeholder="John" autocomplete="given-name">
                     </div>
                     <div class="form-group">
                         <label for="lastName">Last Name *</label>
-                        <input type="text" id="lastName" name="lastName" required placeholder="Doe">
+                        <input type="text" id="lastName" name="lastName" required placeholder="Doe" autocomplete="family-name">
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email Address *</label>
-                    <input type="email" id="email" name="email" required placeholder="john@company.com">
+                    <input type="email" id="email" name="email" required placeholder="john@company.com" autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password *</label>
-                    <input type="password" id="password" name="password" required placeholder="At least 8 characters" minlength="8">
+                    <input type="password" id="password" name="password" required placeholder="At least 8 characters" minlength="8" autocomplete="new-password">
                     <div class="password-strength">
                         <div class="password-strength-bar" id="strengthBar"></div>
                     </div>
@@ -212,13 +213,13 @@
 
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password *</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password">
+                    <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="Confirm your password" autocomplete="new-password">
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="phone" placeholder="+254 700 000 000">
+                        <input type="tel" id="phone" name="phone" placeholder="+254 700 000 000" autocomplete="tel">
                     </div>
                     <div class="form-group">
                         <label for="company">Company Name</label>
@@ -248,7 +249,6 @@
         </div>
     </div>
 
-    <script src="auth.js"></script>
     <script>
         const registerForm = document.getElementById('registerForm');
         const registerButton = document.getElementById('registerButton');
@@ -313,12 +313,15 @@
             successMessage.style.display = 'none';
 
             try {
-                // Use client-side registration
-                const result = window.authSystem.registerUser(userData);
+                const result = await window.authSystem.register(userData.email, userData.password, {
+                    first_name: userData.first_name,
+                    last_name: userData.last_name,
+                    phone: userData.phone,
+                    company: userData.company
+                });
 
                 if (result.success) {
-                    const token = window.authSystem.generateToken();
-                    localStorage.setItem('token', token);
+                    localStorage.setItem('token', 'supabase-session');
                     localStorage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
 
@@ -341,10 +344,11 @@
             }
         });
 
-        // Check if already logged in
-        if (window.authSystem.isAuthenticated()) {
-            window.location.href = 'customer-dashboard.html';
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.authSystem && window.authSystem.isAuthenticated()) {
+                window.location.href = 'customer-dashboard.html';
+            }
+        });
     </script>
 </body>
 </html>

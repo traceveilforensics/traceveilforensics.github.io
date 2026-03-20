@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Direct Customer Login</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        body { font-family: monospace; background: #1a1a2e; color: #fff; padding: 40px; }
+        .box { background: #16213e; padding: 30px; border-radius: 10px; max-width: 400px; margin: 0 auto; }
+        button { padding: 15px; background: #e94560; color: #fff; border: none; cursor: pointer; margin-top: 10px; width: 100%; }
+        button:hover { background: #ff6b6b; }
+        #msg { margin-top: 20px; padding: 15px; border-radius: 5px; }
+        .success { background: #0f0; color: #000; }
+        .error { background: #f00; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Customer Direct Login</h2>
+        <p>Click button to login as test customer</p>
+        <button onclick="loginCustomer()">Login as Customer</button>
+        <div id="msg"></div>
+    </div>
+
+    <script>
+function log(msg, type) {
+    const m = document.getElementById('msg');
+    m.innerHTML = `<span class="${type}">${msg}</span>`;
+    console.log(msg);
+}
+
+function loginCustomer() {
+    const customer = {
+        id: 'cust-' + Date.now(),
+        email: 'customer@traceveil.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        phone: '+254700000000',
+        role: 'customer'
+    };
+    
+    localStorage.setItem('user', JSON.stringify(customer));
+    localStorage.setItem('token', 'test-token-' + Date.now());
+    localStorage.setItem('loginTime', Date.now().toString());
+    
+    log('Login successful! Redirecting...', 'success');
+    setTimeout(() => window.location.href = 'customer-dashboard.html', 1000);
+}
+
+window.authSystem.waitForReady().then(() => {
+    log('Auth system ready!', 'success');
+    log('Services: ' + window.authSystem.getServices().length, 'success');
+    log('Pricing: ' + window.authSystem.getPricing().length, 'success');
+});
+    </script>
+</body>
+</html>
