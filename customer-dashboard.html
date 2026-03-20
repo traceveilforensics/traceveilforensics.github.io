@@ -257,9 +257,23 @@
         }
 
         .btn-secondary {
-            background: rgba(255,255,255,0.08);
+            background: transparent;
             color: var(--text-primary);
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-hover);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
         }
 
         .btn-secondary:hover {
@@ -576,6 +590,11 @@
             display: flex;
             justify-content: flex-end;
             gap: 12px;
+            min-height: 60px;
+        }
+        
+        .modal-footer:empty {
+            display: none;
         }
 
         /* Empty State */
@@ -964,10 +983,13 @@
             </div>
             <div class="modal-body" id="modalBody">
             </div>
+            <div class="modal-footer" id="modalFooter">
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="security.js"></script>
     <script src="auth.js"></script>
     <script>
         let currentUser = null;
@@ -1189,8 +1211,16 @@
         async function loadInvoices() {
             await window.authSystem.waitForReady();
             const userEmail = currentUser.email;
+            const customers = window.authSystem.getCustomers();
+            const currentCustomer = customers.find(c => c.email?.toLowerCase() === userEmail.toLowerCase());
+            
             const allInvoices = window.authSystem.getInvoices();
-            const myInvoices = allInvoices.filter(inv => inv.customer_email && inv.customer_email.toLowerCase() === userEmail.toLowerCase());
+            // Filter by customer_id instead of customer_email
+            const myInvoices = allInvoices.filter(inv => 
+                inv.customer_id === currentCustomer?.id || 
+                inv.customer_id === currentUser.id ||
+                inv.customer_email?.toLowerCase() === userEmail.toLowerCase()
+            );
 
             document.getElementById('contentArea').innerHTML = `
                 <div class="card">
@@ -1210,19 +1240,23 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${myInvoices.length > 0 ? myInvoices.map(inv => `
+                                ${myInvoices.length > 0 ? myInvoices.map(inv => {
+                                    const issueDate = inv.issue_date || inv.created_at || inv.created_date;
+                                    const total = parseFloat(inv.total || 0).toLocaleString();
+                                    const statusClass = inv.status === 'paid' ? 'completed' : inv.status === 'pending' ? 'pending' : inv.status === 'overdue' ? 'overdue' : 'draft';
+                                    return `
                                     <tr>
-                                        <td style="color: var(--text-primary); font-weight: 600;">${inv.invoice_number}</td>
-                                        <td style="color: var(--text-primary);">KES ${parseFloat(inv.total).toLocaleString()}</td>
-                                        <td><span class="status-badge status-${inv.status}">${inv.status}</span></td>
-                                        <td style="color: var(--text-secondary);">${inv.created_date ? new Date(inv.created_date).toLocaleDateString() : '-'}</td>
+                                        <td style="color: var(--text-primary); font-weight: 600;">${inv.invoice_number || 'N/A'}</td>
+                                        <td style="color: var(--text-primary);">KES ${total}</td>
+                                        <td><span style="padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${inv.status === 'paid' ? '#10b981' : inv.status === 'pending' ? '#f59e0b' : '#64748b'}; color: white;">${inv.status || 'draft'}</span></td>
+                                        <td style="color: var(--text-secondary);">${issueDate ? new Date(issueDate).toLocaleDateString() : '-'}</td>
                                         <td style="color: var(--text-secondary);">${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '-'}</td>
                                         <td>
                                             <button class="action-btn" onclick="viewInvoiceDetail('${inv.id}')" title="View"><i class="fas fa-eye"></i></button>
-                                                <button class="action-btn" onclick="downloadInvoice('${inv.id}')" title="Download"><i class="fas fa-download"></i></button>
+                                            <button class="action-btn" onclick="downloadInvoice('${inv.id}')" title="Download"><i class="fas fa-download"></i></button>
                                         </td>
                                     </tr>
-                                `).join('') : '<tr><td colspan="6" class="empty-state"><i class="fas fa-file-invoice"></i><p>No invoices found</p></td></tr>'}
+                                `}).join('') : '<tr><td colspan="6" class="empty-state"><i class="fas fa-file-invoice"></i><p>No invoices found</p></td></tr>'}
                             </tbody>
                         </table>
                     </div>
@@ -1235,6 +1269,10 @@
             const userEmail = currentUser.email;
             const allRequests = window.authSystem.getServiceRequests();
             const myRequests = allRequests.filter(req => req.customer_email === userEmail);
+            
+            // Get services and pricing for display
+            const services = window.authSystem.getServices();
+            const pricing = window.authSystem.getPricing();
 
             document.getElementById('contentArea').innerHTML = `
                 <div class="card">
@@ -1247,27 +1285,159 @@
                             <thead>
                                 <tr>
                                     <th>Title</th>
-                                    <th>Service Plan</th>
+                                    <th>Service</th>
                                     <th>Status</th>
                                     <th>Priority</th>
                                     <th>Requested</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${myRequests.length > 0 ? myRequests.map(req => `
+                                ${myRequests.length > 0 ? myRequests.map(req => {
+                                    // Get service name from service_name field or look up by service_plan_id
+                                    let serviceName = req.service_name;
+                                    if (!serviceName && req.service_plan_id) {
+                                        const plan = pricing.find(p => p.id === req.service_plan_id);
+                                        if (plan) {
+                                            const service = services.find(s => s.id === plan.service_id);
+                                            serviceName = service?.name || plan.name;
+                                        }
+                                    }
+                                    serviceName = serviceName || 'Custom Request';
+                                    
+                                    const requestDate = req.requested_date || req.created_at;
+                                    const formattedDate = requestDate ? new Date(requestDate).toLocaleDateString() : '-';
+                                    
+                                    const statusColors = {
+                                        pending: { bg: '#f59e0b', text: '#fff' },
+                                        in_progress: { bg: '#3b82f6', text: '#fff' },
+                                        completed: { bg: '#10b981', text: '#fff' },
+                                        cancelled: { bg: '#ef4444', text: '#fff' }
+                                    };
+                                    const statusStyle = statusColors[req.status] || statusColors.pending;
+                                    
+                                    const priorityColors = {
+                                        low: { bg: '#64748b', text: '#fff' },
+                                        normal: { bg: '#3b82f6', text: '#fff' },
+                                        high: { bg: '#f59e0b', text: '#fff' },
+                                        urgent: { bg: '#ef4444', text: '#fff' }
+                                    };
+                                    const priorityStyle = priorityColors[req.priority] || priorityColors.normal;
+                                    
+                                    return `
                                     <tr>
-                                        <td style="color: var(--text-primary); font-weight: 600;">${req.title || req.service_name || 'Service Request'}</td>
-                                        <td style="color: var(--text-secondary);">${req.plan_name || req.service_name || 'Custom'}</td>
-                                        <td><span class="status-badge status-${req.status}">${req.status}</span></td>
-                                        <td><span class="status-badge status-${req.priority === 'high' ? 'overdue' : req.priority === 'urgent' ? 'overdue' : 'pending'}">${req.priority || 'normal'}</span></td>
-                                        <td style="color: var(--text-secondary);">${req.created_date ? new Date(req.created_date).toLocaleDateString() : '-'}</td>
+                                        <td style="color: var(--text-primary); font-weight: 600;">${req.title || 'Service Request'}</td>
+                                        <td style="color: var(--text-secondary);">${serviceName}</td>
+                                        <td><span style="padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${statusStyle.bg}; color: ${statusStyle.text};">${(req.status || 'pending').replace('_', ' ')}</span></td>
+                                        <td><span style="padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; background: ${priorityStyle.bg}; color: ${priorityStyle.text};">${req.priority || 'normal'}</span></td>
+                                        <td style="color: var(--text-secondary);">${formattedDate}</td>
+                                        <td>
+                                            <div style="display: flex; gap: 8px;">
+                                                <button onclick="viewMyRequest('${req.id}')" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                                    <i class="fas fa-eye"></i> View
+                                                </button>
+                                                ${req.status !== 'completed' ? `
+                                                <button onclick="deleteMyRequest('${req.id}')" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px;">
+                                                    <i class="fas fa-trash"></i> Delete
+                                                </button>
+                                                ` : ''}
+                                            </div>
+                                        </td>
                                     </tr>
-                                `).join('') : '<tr><td colspan="5" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No requests found</p></td></tr>'}
+                                `}).join('') : '<tr><td colspan="6" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No requests found</p></td></tr>'}
                             </tbody>
                         </table>
                     </div>
                 </div>
             `;
+        }
+        
+        function viewMyRequest(id) {
+            console.log('Viewing request:', id);
+            
+            const allRequests = window.authSystem.getServiceRequests();
+            const req = allRequests.find(r => r.id == id);
+            
+            if (!req) {
+                console.error('Request not found:', id);
+                return;
+            }
+            
+            console.log('Request data:', req);
+            
+            const services = window.authSystem.getServices();
+            const pricing = window.authSystem.getPricing();
+            
+            let serviceName = req.service_name;
+            let planName = req.plan_name || '';
+            
+            if (!serviceName && req.service_plan_id) {
+                const plan = pricing.find(p => p.id === req.service_plan_id);
+                if (plan) {
+                    if (!planName) planName = plan.name;
+                    const service = services.find(s => s.id === plan.service_id);
+                    if (service) serviceName = service.name;
+                }
+            }
+            serviceName = serviceName || 'Custom Request';
+            
+            const requestDate = req.requested_date || req.created_at;
+            const formattedDate = requestDate ? new Date(requestDate).toLocaleString() : 'N/A';
+            
+            document.getElementById('modalTitle').textContent = 'Request Details';
+            document.getElementById('modalBody').innerHTML = `
+                <div style="padding: 10px;">
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Request Information</h4>
+                        <p><strong>Title:</strong> ${req.title || 'N/A'}</p>
+                        <p><strong>Service:</strong> ${serviceName}</p>
+                        ${planName ? `<p><strong>Plan:</strong> ${planName}</p>` : ''}
+                        <p><strong>Priority:</strong> <span style="padding: 4px 10px; border-radius: 4px; font-size: 12px; background: ${req.priority === 'high' ? '#f59e0b' : req.priority === 'urgent' ? '#ef4444' : '#3b82f6'}; color: white;">${req.priority || 'normal'}</span></p>
+                        <p><strong>Status:</strong> <span style="padding: 4px 10px; border-radius: 4px; font-size: 12px; background: ${req.status === 'completed' ? '#10b981' : req.status === 'in_progress' ? '#3b82f6' : req.status === 'cancelled' ? '#ef4444' : '#f59e0b'}; color: white;">${(req.status || 'pending').replace('_', ' ')}</span></p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Description</h4>
+                        <p style="background: var(--bg-light); padding: 15px; border-radius: 8px;">${req.description || 'No description provided'}</p>
+                    </div>
+                    ${req.notes ? `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: var(--accent); margin-bottom: 10px;">Admin Notes</h4>
+                        <p style="background: var(--bg-light); padding: 15px; border-radius: 8px;">${req.notes}</p>
+                    </div>
+                    ` : ''}
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 15px;">
+                        <p><strong>Submitted:</strong> ${formattedDate}</p>
+                        ${req.completed_date ? `<p><strong>Completed:</strong> ${new Date(req.completed_date).toLocaleString()}</p>` : ''}
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalFooter').innerHTML = `
+                <button onclick="closeModal()" style="background: #374151; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Close</button>
+                ${req.status !== 'completed' ? `<button onclick="deleteMyRequest('${id}')" style="background: #ef4444; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Delete Request</button>` : ''}
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+        
+        async function deleteMyRequest(id) {
+            if (!confirm('Are you sure you want to delete this request? This cannot be undone.')) return;
+            
+            console.log('Deleting request:', id);
+            
+            try {
+                const result = await window.authSystem.deleteServiceRequest(id);
+                console.log('Delete result:', result);
+                
+                if (result.success) {
+                    alert('Request deleted successfully');
+                    closeModal();
+                    loadRequests();
+                } else {
+                    alert('Error: ' + (result.error || 'Failed to delete request'));
+                }
+            } catch (e) {
+                console.error('Delete error:', e);
+                alert('Error: ' + e.message);
+            }
         }
 
         function getReviews() {
@@ -1444,8 +1614,11 @@
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
 
+                // Get customer ID properly
+                const customerId = await window.authSystem.getCustomerIdForUser(currentUser.email, currentUser.id);
+
                 const newRequest = {
-                    customer_id: currentUser.id,
+                    customer_id: customerId,
                     customer_name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
                     customer_email: currentUser.email,
                     title: data.title,
@@ -1453,11 +1626,16 @@
                     priority: 'normal'
                 };
                 
-                await window.authSystem.addServiceRequest(newRequest);
+                console.log('Submitting custom request with customer_id:', customerId);
+                const result = await window.authSystem.addServiceRequest(newRequest);
                 
-                closeModal();
-                showPage('requests');
-                alert('Your custom quote request has been submitted! We will contact you soon.');
+                if (result.success) {
+                    closeModal();
+                    showPage('requests');
+                    alert('Your custom quote request has been submitted! We will contact you soon.');
+                } else {
+                    alert('Failed to submit request: ' + result.error);
+                }
             });
 
             openModal();
@@ -1626,19 +1804,52 @@
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
                 
+                // Get customer ID properly
+                const customerId = await window.authSystem.getCustomerIdForUser(currentUser.email, currentUser.id);
+                
+                // Get service and plan names from selection
+                const services = window.authSystem.getServices();
+                const pricing = window.authSystem.getPricing();
+                
+                // Check if selected value is a plan ID or service ID
+                let selectedPlan = pricing.find(p => p.id === data.service_id);
+                let selectedService = null;
+                let serviceName = '';
+                let planName = '';
+                
+                if (selectedPlan) {
+                    // A plan was selected
+                    planName = selectedPlan.name;
+                    selectedService = services.find(s => s.id === selectedPlan.service_id);
+                    serviceName = selectedService?.name || '';
+                } else {
+                    // A service (without plan) was selected
+                    selectedService = services.find(s => s.id === data.service_id);
+                    serviceName = selectedService?.name || '';
+                }
+                
                 const newRequest = {
-                    customer_id: currentUser.id,
+                    customer_id: customerId,
                     customer_name: `${currentUser.first_name || ''} ${currentUser.last_name || ''}`.trim(),
                     customer_email: currentUser.email,
+                    service_plan_id: selectedPlan?.id || null,
+                    service_name: serviceName,
+                    plan_name: planName,
                     title: data.title,
                     description: data.description,
                     priority: data.priority
                 };
                 
-                await window.authSystem.addServiceRequest(newRequest);
+                console.log('Submitting service request:', newRequest);
+                const result = await window.authSystem.addServiceRequest(newRequest);
                 
-                closeModal();
-                showPage('requests');
+                if (result.success) {
+                    closeModal();
+                    showPage('requests');
+                    alert('Your service request has been submitted!');
+                } else {
+                    alert('Failed to submit request: ' + result.error);
+                }
             });
 
             openModal();
@@ -1723,24 +1934,28 @@
             
             if (!invoice) return;
             
+            const issueDate = invoice.issue_date || invoice.created_at || invoice.created_date;
+            const total = parseFloat(invoice.total || 0).toLocaleString();
+            const statusColor = invoice.status === 'paid' ? '#10b981' : invoice.status === 'pending' ? '#f59e0b' : '#64748b';
+            
             document.getElementById('modalTitle').textContent = `Invoice ${invoice.invoice_number}`;
             document.getElementById('modalBody').innerHTML = `
                 <div class="invoice-detail" style="margin-bottom: 20px;">
                     <div class="info-item">
                         <span class="info-label">Invoice Number</span>
-                        <span class="info-value" style="font-weight: 600; color: var(--accent);">${invoice.invoice_number}</span>
+                        <span class="info-value" style="font-weight: 600; color: var(--accent);">${invoice.invoice_number || 'N/A'}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Amount</span>
-                        <span class="info-value" style="font-size: 18px; font-weight: 700;">KES ${parseFloat(invoice.total).toLocaleString()}</span>
+                        <span class="info-value" style="font-size: 18px; font-weight: 700;">KES ${total}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Status</span>
-                        <span class="info-value"><span class="status-badge status-${invoice.status}">${invoice.status}</span></span>
+                        <span class="info-value"><span style="padding: 4px 10px; border-radius: 4px; font-size: 12px; background: ${statusColor}; color: white;">${invoice.status || 'draft'}</span></span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Issue Date</span>
-                        <span class="info-value">${invoice.created_date ? new Date(invoice.created_date).toLocaleDateString() : '-'}</span>
+                        <span class="info-label">Created Date</span>
+                        <span class="info-value">${issueDate ? new Date(issueDate).toLocaleDateString() : '-'}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Due Date</span>
@@ -1768,17 +1983,17 @@
                                 <tr>
                                     <td style="color: var(--text-primary);">${item.description}</td>
                                     <td style="color: var(--text-secondary);">${item.quantity}</td>
-                                    <td style="color: var(--text-secondary);">KES ${parseFloat(item.unit_price).toLocaleString()}</td>
-                                    <td style="color: var(--text-primary); font-weight: 600;">KES ${parseFloat(item.total).toLocaleString()}</td>
+                                    <td style="color: var(--text-secondary);">KES ${parseFloat(item.unit_price || 0).toLocaleString()}</td>
+                                    <td style="color: var(--text-primary); font-weight: 600;">KES ${parseFloat(item.total || 0).toLocaleString()}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>
-                ` : ''}
+                ` : '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No items</p>'}
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="downloadInvoice(${invoice.id})">
+                    <button type="button" class="btn btn-primary" onclick="downloadInvoice('${invoice.id}')">
                         <i class="fas fa-download"></i> Download
                     </button>
                 </div>
@@ -1901,15 +2116,15 @@
                             </div>
                             <div class="invoice-info">
                                 <h2>${invoice.invoice_number}</h2>
-                                <p>Date: ${invoice.created_date}</p>
-                                <p>Due: ${invoice.due_date}</p>
+                                <p>Created: ${invoice.issue_date || invoice.created_at ? new Date(invoice.issue_date || invoice.created_at).toLocaleDateString() : 'N/A'}</p>
+                                <p>Due: ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}</p>
                                 <span class="status">${invoice.status}</span>
                             </div>
                         </div>
                         <div class="bill-to">
-                            <h3><i class="fas fa-user"></i> Bill To:</h3>
-                            <p><strong>${invoice.customer_name}</strong></p>
-                            <p>${invoice.customer_email}</p>
+                            <h3>Bill To:</h3>
+                            <p><strong>${invoice.customer_name || 'N/A'}</strong></p>
+                            <p>${invoice.customer_email || 'N/A'}</p>
                         </div>
                         <table>
                             <thead>

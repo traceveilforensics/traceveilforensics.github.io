@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="security.js"></script>
     <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
@@ -1787,7 +1788,9 @@
         }
 
         // ============ DASHBOARD ============
-        function loadDashboard() {
+        async function loadDashboard() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const stats = window.authSystem.getDashboardStats();
             const invoices = window.authSystem.getInvoices();
             const requests = window.authSystem.getServiceRequests();
@@ -1871,7 +1874,9 @@
         }
 
         // ============ SERVICES ============
-        function loadServices() {
+        async function loadServices() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const services = window.authSystem.getServices();
 
             document.getElementById('contentArea').innerHTML = `
@@ -2013,7 +2018,9 @@
         }
 
         // ============ PRICING ============
-        function loadPricing() {
+        async function loadPricing() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const pricing = window.authSystem.getPricing();
             const services = window.authSystem.getServices();
 
@@ -2208,9 +2215,23 @@
         }
 
         // ============ INVOICES ============
-        function loadInvoices() {
-            const invoices = window.authSystem.getInvoices();
+        async function loadInvoices() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
+            const rawInvoices = window.authSystem.getInvoices();
             const customers = window.authSystem.getCustomers();
+            
+            // Join invoices with customers to get customer info
+            const invoices = rawInvoices.map(inv => {
+                const customer = customers.find(c => c.id === inv.customer_id);
+                return {
+                    ...inv,
+                    customer_name: customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || customer.email : 'Unknown',
+                    customer_email: customer?.email || 'N/A',
+                    display_date: inv.issue_date || inv.created_at || inv.created_date,
+                    display_total: parseFloat(inv.total || 0).toLocaleString()
+                };
+            });
 
             document.getElementById('contentArea').innerHTML = `
                 <!-- Header -->
@@ -2294,11 +2315,11 @@
                                         <div style="color: #ffffff; font-weight: 500;">${inv.customer_name}</div>
                                         <div style="color: #64748b; font-size: 12px;">${inv.customer_email}</div>
                                     </td>
-                                    <td style="padding: 16px;"><span style="color: #ffffff; font-weight: 700;">KES ${parseFloat(inv.total).toLocaleString()}</span></td>
-                                    <td style="padding: 16px; color: #94a3b8;">${inv.created_date}</td>
-                                    <td style="padding: 16px; color: #94a3b8;">${inv.due_date}</td>
+                                    <td style="padding: 16px;"><span style="color: #ffffff; font-weight: 700;">KES ${inv.display_total}</span></td>
+                                    <td style="padding: 16px; color: #94a3b8;">${inv.display_date ? new Date(inv.display_date).toLocaleDateString() : 'N/A'}</td>
+                                    <td style="padding: 16px; color: #94a3b8;">${inv.due_date ? new Date(inv.due_date).toLocaleDateString() : 'N/A'}</td>
                                     <td style="padding: 16px;">
-                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${inv.status === 'paid' ? 'rgba(16,185,129,0.2)' : inv.status === 'pending' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'}; color: ${inv.status === 'paid' ? '#10b981' : inv.status === 'pending' ? '#f59e0b' : '#ef4444'}; text-transform: capitalize;">${inv.status}</span>
+                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${inv.status === 'paid' ? 'rgba(16,185,129,0.2)' : inv.status === 'pending' ? 'rgba(245,158,11,0.2)' : 'rgba(239,68,68,0.2)'}; color: ${inv.status === 'paid' ? '#10b981' : inv.status === 'pending' ? '#f59e0b' : '#ef4444'}; text-transform: capitalize;">${inv.status || 'draft'}</span>
                                     </td>
                                     <td style="padding: 16px; text-align: right;">
                                         <div style="display: flex; gap: 8px; justify-content: flex-end;">
@@ -2421,17 +2442,11 @@
         }
 
         async function saveInvoice() {
-            const invoices = window.authSystem.getInvoices();
             const customers = window.authSystem.getCustomers();
-            const demoCustomers = [
-                { id: 2, email: 'customer@traceveilforensics.com', first_name: 'John', last_name: 'Doe' },
-                { id: 3, email: 'test@test.com', first_name: 'Test', last_name: 'User' }
-            ];
-            const allCustomers = [...demoCustomers, ...customers];
 
             const customerSelect = document.getElementById('invoiceCustomer');
             const selectedOption = customerSelect.options[customerSelect.selectedIndex];
-            const customerId = parseInt(customerSelect.value);
+            const customerId = customerSelect.value;  // Keep as string for UUID
 
             const items = [];
             let subtotal = 0;
@@ -2456,21 +2471,37 @@
                 return;
             }
 
-            const taxRate = 0;
-            const taxAmount = 0;
+            console.log('Saving invoice with items:', items);
             
             try {
-                await window.authSystem.addInvoice({
+                const result = await window.authSystem.addInvoice({
                     customer_id: customerId,
                     customer_email: selectedOption.dataset.email,
                     customer_name: selectedOption.dataset.name,
                     subtotal: subtotal,
-                    tax_rate: taxRate,
-                    tax_amount: taxAmount,
+                    tax_rate: 0,
+                    tax_amount: 0,
                     total: subtotal,
-                    due_date: document.getElementById('invoiceDueDate').value
+                    due_date: document.getElementById('invoiceDueDate').value,
+                    items: items  // Pass items to be saved
                 });
-                showToast('Invoice created successfully!', 'success');
+                
+                if (result.success) {
+                    showToast('Invoice created successfully!', 'success');
+                    
+                    // Send invoice notification to customer
+                    if (window.authSystem.sendInvoiceNotification) {
+                        await window.authSystem.sendInvoiceNotification({
+                            customer_email: selectedOption.dataset.email,
+                            customer_name: selectedOption.dataset.name,
+                            invoice_number: result.invoice_number,
+                            total: subtotal,
+                            due_date: document.getElementById('invoiceDueDate').value
+                        });
+                    }
+                } else {
+                    showToast('Error: ' + result.error, 'error');
+                }
             } catch (e) {
                 showToast('Error: ' + e.message, 'error');
             }
@@ -2482,8 +2513,16 @@
 
         function viewInvoice(id) {
             const invoices = window.authSystem.getInvoices();
+            const customers = window.authSystem.getCustomers();
             const invoice = invoices.find(i => i.id == id);
             if (!invoice) return;
+
+            // Get customer info
+            const customer = customers.find(c => c.id === invoice.customer_id);
+            const customerName = customer ? `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.company_name || customer.email : invoice.customer_name || 'Unknown';
+            const customerEmail = customer?.email || invoice.customer_email || 'N/A';
+            const issueDate = invoice.issue_date || invoice.created_at || invoice.created_date;
+            const total = parseFloat(invoice.total || 0).toLocaleString();
 
             document.getElementById('modalTitle').textContent = `Invoice ${invoice.invoice_number}`;
             document.getElementById('modalBody').innerHTML = `
@@ -2497,19 +2536,19 @@
                         </div>
                         <div style="text-align: right;">
                             <h3>${invoice.invoice_number}</h3>
-                            <p style="color: var(--text-secondary);">Status: <span class="status-badge status-${invoice.status}">${invoice.status}</span></p>
+                            <p style="color: var(--text-secondary);">Status: <span style="padding: 4px 10px; border-radius: 4px; font-size: 12px; background: ${invoice.status === 'paid' ? '#10b981' : invoice.status === 'pending' ? '#f59e0b' : '#64748b'}; color: white;">${invoice.status || 'draft'}</span></p>
                         </div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px;">
                         <div>
-                            <h4 style="margin-bottom: 10px;">Bill To:</h4>
-                            <p><strong>${invoice.customer_name}</strong></p>
-                            <p>${invoice.customer_email}</p>
+                            <h4 style="margin-bottom: 10px; color: #FFD700;">Bill To:</h4>
+                            <p><strong>${customerName}</strong></p>
+                            <p>${customerEmail}</p>
                         </div>
                         <div>
-                            <p><strong>Created:</strong> ${invoice.created_date}</p>
-                            <p><strong>Due Date:</strong> ${invoice.due_date}</p>
-                            ${invoice.paid_date ? `<p><strong>Paid:</strong> ${invoice.paid_date}</p>` : ''}
+                            <p><strong>Created:</strong> ${issueDate ? new Date(issueDate).toLocaleDateString() : 'N/A'}</p>
+                            <p><strong>Due Date:</strong> ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}</p>
+                            ${invoice.paid_date ? `<p><strong>Paid:</strong> ${new Date(invoice.paid_date).toLocaleDateString()}</p>` : ''}
                         </div>
                     </div>
                     <table class="table">
@@ -2526,14 +2565,14 @@
                                 <tr>
                                     <td>${item.description}</td>
                                     <td>${item.quantity}</td>
-                                    <td>KES ${item.unit_price.toLocaleString()}</td>
-                                    <td>KES ${item.total.toLocaleString()}</td>
+                                    <td>KES ${parseFloat(item.unit_price || 0).toLocaleString()}</td>
+                                    <td>KES ${parseFloat(item.total || 0).toLocaleString()}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                     <div style="text-align: right; margin-top: 20px;">
-                        <h3>Total: KES ${invoice.total.toLocaleString()}</h3>
+                        <h3>Total: KES ${total}</h3>
                     </div>
                 </div>
             `;
@@ -2660,15 +2699,15 @@
                             </div>
                             <div class="invoice-info">
                                 <h2>${invoice.invoice_number}</h2>
-                                <p>Date: ${invoice.created_date}</p>
-                                <p>Due: ${invoice.due_date}</p>
+                                <p>Created: ${invoice.issue_date || invoice.created_at ? new Date(invoice.issue_date || invoice.created_at).toLocaleDateString() : 'N/A'}</p>
+                                <p>Due: ${invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'N/A'}</p>
                                 <span class="status">${invoice.status}</span>
                             </div>
                         </div>
                         <div class="bill-to">
-                            <h3><i class="fas fa-user"></i> Bill To:</h3>
-                            <p><strong>${invoice.customer_name}</strong></p>
-                            <p>${invoice.customer_email}</p>
+                            <h3>Bill To:</h3>
+                            <p><strong>${invoice.customer_name || 'N/A'}</strong></p>
+                            <p>${invoice.customer_email || 'N/A'}</p>
                         </div>
                         <table>
                             <thead>
@@ -2869,9 +2908,12 @@
         }
 
         // ============ SERVICE REQUESTS ============
-        function loadRequests() {
+        async function loadRequests() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const requests = window.authSystem.getServiceRequests();
             const services = window.authSystem.getServices();
+            const pricing = window.authSystem.getPricing();
 
             document.getElementById('contentArea').innerHTML = `
                 <!-- Header -->
@@ -2933,20 +2975,35 @@
                             </tr>
                         </thead>
                         <tbody>
-                            ${requests.length ? requests.map(req => `
+                            ${requests.length ? requests.map(req => {
+                                const displayDate = req.created_at || req.requested_date;
+                                const formattedDate = displayDate ? new Date(displayDate).toLocaleDateString() : 'N/A';
+                                
+                                // Get exact service name
+                                let serviceName = req.service_name;
+                                if (!serviceName && req.service_plan_id) {
+                                    const plan = pricing.find(p => p.id === req.service_plan_id);
+                                    if (plan) {
+                                        const service = services.find(s => s.id === plan.service_id);
+                                        serviceName = service?.name || plan.name;
+                                    }
+                                }
+                                serviceName = serviceName || 'Custom Request';
+                                
+                                return `
                                 <tr style="border-bottom: 1px solid #334155;">
                                     <td style="padding: 16px;">
-                                        <div style="color: #ffffff; font-weight: 500;">${req.customer_name}</div>
-                                        <div style="color: #64748b; font-size: 12px;">${req.customer_email}</div>
+                                        <div style="color: #ffffff; font-weight: 500;">${req.customer_name || 'N/A'}</div>
+                                        <div style="color: #64748b; font-size: 12px;">${req.customer_email || 'N/A'}</div>
                                     </td>
-                                    <td style="padding: 16px; color: #f1f5f9;">${req.service_name}</td>
+                                    <td style="padding: 16px; color: #f1f5f9;">${serviceName}</td>
                                     <td style="padding: 16px;">
-                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${req.priority === 'high' ? 'rgba(239,68,68,0.2)' : req.priority === 'medium' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)'}; color: ${req.priority === 'high' ? '#ef4444' : req.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; text-transform: capitalize;">${req.priority}</span>
+                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${req.priority === 'high' ? 'rgba(239,68,68,0.2)' : req.priority === 'medium' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)'}; color: ${req.priority === 'high' ? '#ef4444' : req.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; text-transform: capitalize;">${req.priority || 'normal'}</span>
                                     </td>
                                     <td style="padding: 16px;">
-                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${req.status === 'completed' ? 'rgba(16,185,129,0.2)' : req.status === 'pending' ? 'rgba(245,158,11,0.2)' : 'rgba(59,130,246,0.2)'}; color: ${req.status === 'completed' ? '#10b981' : req.status === 'pending' ? '#f59e0b' : '#3b82f6'}; text-transform: capitalize;">${req.status.replace('_', ' ')}</span>
+                                        <span style="padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; background: ${req.status === 'completed' ? 'rgba(16,185,129,0.2)' : req.status === 'pending' ? 'rgba(245,158,11,0.2)' : req.status === 'in_progress' ? 'rgba(59,130,246,0.2)' : 'rgba(100,116,139,0.2)'}; color: ${req.status === 'completed' ? '#10b981' : req.status === 'pending' ? '#f59e0b' : req.status === 'in_progress' ? '#3b82f6' : '#94a3b8'}; text-transform: capitalize;">${(req.status || 'pending').replace('_', ' ')}</span>
                                     </td>
-                                    <td style="padding: 16px; color: #94a3b8;">${req.created_date}</td>
+                                    <td style="padding: 16px; color: #94a3b8;">${formattedDate}</td>
                                     <td style="padding: 16px; text-align: right;">
                                         <div style="display: flex; gap: 8px; justify-content: flex-end;">
                                             <button onclick="viewRequest('${req.id}')" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 8px 12px; border-radius: 6px; cursor: pointer;"><i class="fas fa-eye"></i></button>
@@ -2954,7 +3011,7 @@
                                         </div>
                                     </td>
                                 </tr>
-                            `).join('') : `
+                            `}).join('') : `
                                 <tr>
                                     <td colspan="6" style="padding: 60px; text-align: center;">
                                         <i class="fas fa-clipboard-list" style="color: #64748b; font-size: 60px; margin-bottom: 20px;"></i>
@@ -2974,31 +3031,67 @@
             const req = requests.find(r => r.id == id);
             if (!req) return;
 
+            // Get customer details from customers table
+            const customers = window.authSystem.getCustomers();
+            const customer = customers.find(c => c.id === req.customer_id);
+            const customerPhone = customer?.phone || 'N/A';
+            const customerCompany = customer?.company_name || 'N/A';
+
+            // Get service and plan info by looking up service_plan_id
+            const services = window.authSystem.getServices();
+            const pricing = window.authSystem.getPricing();
+            
+            let serviceName = req.service_name;
+            let planName = req.plan_name || 'N/A';
+            
+            if (req.service_plan_id) {
+                const plan = pricing.find(p => p.id === req.service_plan_id);
+                if (plan) {
+                    if (!planName || planName === 'N/A') planName = plan.name;
+                    const service = services.find(s => s.id === plan.service_id);
+                    if (service && !serviceName) {
+                        serviceName = service.name;
+                    }
+                }
+            }
+            serviceName = serviceName || 'Custom Request';
+
+            // Format dates
+            const createdDate = req.created_at || req.requested_date;
+            const formattedCreated = createdDate ? new Date(createdDate).toLocaleString() : 'N/A';
+            const formattedCompleted = req.completed_date ? new Date(req.completed_date).toLocaleString() : null;
+
             document.getElementById('modalTitle').textContent = 'Service Request Details';
             document.getElementById('modalBody').innerHTML = `
                 <div style="padding: 10px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                         <div>
-                            <h4 style="margin-bottom: 15px;">Customer Information</h4>
-                            <p><strong>Name:</strong> ${req.customer_name}</p>
-                            <p><strong>Email:</strong> ${req.customer_email}</p>
-                            <p><strong>Phone:</strong> ${req.customer_phone}</p>
+                            <h4 style="margin-bottom: 15px; color: #FFD700;">Customer Information</h4>
+                            <p><strong>Name:</strong> ${req.customer_name || 'N/A'}</p>
+                            <p><strong>Email:</strong> ${req.customer_email || 'N/A'}</p>
+                            <p><strong>Phone:</strong> ${customerPhone}</p>
+                            <p><strong>Company:</strong> ${customerCompany}</p>
                         </div>
                         <div>
-                            <h4 style="margin-bottom: 15px;">Request Information</h4>
-                            <p><strong>Service:</strong> ${req.service_name}</p>
-                            <p><strong>Plan:</strong> ${req.plan_name}</p>
-                            <p><strong>Priority:</strong> <span class="priority-badge priority-${req.priority}">${req.priority}</span></p>
-                            <p><strong>Status:</strong> <span class="status-badge status-${req.status}">${req.status.replace('_', ' ')}</span></p>
+                            <h4 style="margin-bottom: 15px; color: #FFD700;">Request Information</h4>
+                            <p><strong>Title:</strong> ${req.title || 'N/A'}</p>
+                            <p><strong>Service:</strong> ${serviceName}</p>
+                            <p><strong>Plan:</strong> ${planName}</p>
+                            <p><strong>Priority:</strong> <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background: ${req.priority === 'high' ? '#ef4444' : req.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; color: white;">${req.priority || 'normal'}</span></p>
+                            <p><strong>Status:</strong> <span style="padding: 4px 8px; border-radius: 4px; font-size: 12px; background: ${req.status === 'completed' ? '#10b981' : req.status === 'in_progress' ? '#f59e0b' : req.status === 'cancelled' ? '#ef4444' : '#64748b'}; color: white;">${(req.status || 'pending').replace('_', ' ')}</span></p>
                         </div>
                     </div>
                     <div style="margin-top: 20px;">
-                        <h4>Notes</h4>
-                        <p style="background: var(--bg-light); padding: 15px; border-radius: 8px;">${req.notes || 'No notes provided'}</p>
+                        <h4 style="color: #FFD700;">Description</h4>
+                        <p style="background: #1e293b; padding: 15px; border-radius: 8px; color: #e2e8f0;">${req.description || 'No description provided'}</p>
                     </div>
                     <div style="margin-top: 20px;">
-                        <p><strong>Created:</strong> ${req.created_date}</p>
-                        ${req.completed_date ? `<p><strong>Completed:</strong> ${req.completed_date}</p>` : ''}
+                        <h4 style="color: #FFD700;">Notes</h4>
+                        <p style="background: #1e293b; padding: 15px; border-radius: 8px; color: #e2e8f0;">${req.notes || 'No notes provided'}</p>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #334155;">
+                        <p><strong>Created:</strong> ${formattedCreated}</p>
+                        ${formattedCompleted ? `<p><strong>Completed:</strong> ${formattedCompleted}</p>` : ''}
                     </div>
                 </div>
             `;
@@ -3042,10 +3135,27 @@
 
         async function updateRequestStatus(id) {
             try {
+                const newStatus = document.getElementById('newRequestStatus').value;
+                const notes = document.getElementById('requestNotes').value;
+                
                 await window.authSystem.updateServiceRequest(id, {
-                    status: document.getElementById('newRequestStatus').value,
-                    notes: document.getElementById('requestNotes').value
+                    status: newStatus,
+                    notes: notes
                 });
+                
+                // Send notification if service completed
+                if (newStatus === 'completed') {
+                    const requests = window.authSystem.getServiceRequests();
+                    const req = requests.find(r => r.id == id);
+                    if (req && window.authSystem.sendServiceCompleteNotification) {
+                        await window.authSystem.sendServiceCompleteNotification({
+                            customer_email: req.customer_email,
+                            customer_name: req.customer_name,
+                            title: req.title
+                        });
+                    }
+                }
+                
                 closeModal();
                 showToast('Request status updated!', 'success');
                 loadRequests();
@@ -3056,7 +3166,9 @@
         }
 
         // ============ CUSTOMERS ============
-        function loadCustomers() {
+        async function loadCustomers() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const customers = window.authSystem.getCustomers();
 
             document.getElementById('contentArea').innerHTML = `
@@ -3273,6 +3385,12 @@
                             <button onclick="closeModal(); setTimeout(() => editCustomer('${customer.id}'), 100);" style="background: rgba(59,130,246,0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
                                 <i class="fas fa-edit"></i> Edit Customer
                             </button>
+                            <button onclick="closeModal(); setTimeout(() => showSetPasswordModal('${customerEmail}', '${displayName}'), 100);" style="background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; color: #f59e0b; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                                <i class="fas fa-key"></i> Set Password
+                            </button>
+                            <button onclick="resetCustomerPassword('${customerEmail}')" style="background: rgba(16,185,129,0.1); border: 1px solid #10b981; color: #10b981; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                                <i class="fas fa-envelope"></i> Send Reset Email
+                            </button>
                             <button onclick="deleteCustomer('${customer.id}'); closeModal();" style="background: rgba(239,68,68,0.1); border: 1px solid #ef4444; color: #ef4444; padding: 14px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px;">
                                 <i class="fas fa-trash"></i> Delete Customer
                             </button>
@@ -3353,6 +3471,76 @@
                 const result = await window.authSystem.resetCustomerPassword(email);
                 if (result.success) {
                     showToast('Password reset email sent to ' + email, 'success');
+                } else {
+                    showToast('Error: ' + result.error, 'error');
+                }
+            } catch (e) {
+                showToast('Error: ' + e.message, 'error');
+            }
+        }
+
+        function showSetPasswordModal(email, customerName) {
+            const tempPassword = window.authSystem.generateTempPassword();
+            
+            document.getElementById('modalTitle').textContent = 'Set Customer Password';
+            document.getElementById('modalBody').innerHTML = `
+                <div style="padding: 20px;">
+                    <p style="color: #94a3b8; margin-bottom: 20px;">Set a new password for <strong style="color: #FFD700;">${customerName}</strong> (${email})</p>
+                    
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label class="form-label" style="display: block; margin-bottom: 8px; color: #94a3b8; font-size: 12px;">New Password</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="newCustomerPassword" value="${tempPassword}" style="flex: 1; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #f1f5f9; font-family: monospace;">
+                            <button onclick="generateNewPassword()" style="background: rgba(59,130,246,0.2); border: 1px solid #3b82f6; color: #3b82f6; padding: 10px 15px; border-radius: 8px; cursor: pointer;">
+                                <i class="fas fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(245,158,11,0.1); border: 1px solid #f59e0b; border-radius: 8px; padding: 12px; margin-bottom: 20px;">
+                        <p style="color: #f59e0b; font-size: 12px;"><i class="fas fa-exclamation-triangle"></i> Share this password with the customer securely.</p>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="copyPassword()" style="flex: 1; background: rgba(16,185,129,0.2); border: 1px solid #10b981; color: #10b981; padding: 12px; border-radius: 8px; cursor: pointer;">
+                            <i class="fas fa-copy"></i> Copy Password
+                        </button>
+                        <button onclick="setCustomerPassword('${email}')" style="flex: 1; background: linear-gradient(135deg, #FFD700, #e6c200); color: #0A1628; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-save"></i> Set Password
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modalFooter').innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            `;
+            document.getElementById('modalOverlay').classList.add('active');
+        }
+
+        function generateNewPassword() {
+            const password = window.authSystem.generateTempPassword();
+            document.getElementById('newCustomerPassword').value = password;
+        }
+
+        function copyPassword() {
+            const password = document.getElementById('newCustomerPassword').value;
+            navigator.clipboard.writeText(password);
+            showToast('Password copied to clipboard!', 'success');
+        }
+
+        async function setCustomerPassword(email) {
+            const password = document.getElementById('newCustomerPassword').value;
+            
+            if (!password || password.length < 6) {
+                showToast('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            try {
+                const result = await window.authSystem.adminSetPassword(email, password);
+                if (result.success) {
+                    showToast('Password updated successfully!', 'success');
+                    closeModal();
                 } else {
                     showToast('Error: ' + result.error, 'error');
                 }
@@ -3492,7 +3680,9 @@
         }
 
         // ============ REVIEWS ============
-        function loadAdminReviews() {
+        async function loadAdminReviews() {
+            await window.authSystem.init();
+            await window.authSystem.waitForReady();
             const reviews = window.authSystem.getReviews();
             const activeReviews = reviews.filter(r => r.is_approved === true);
             const flaggedReviews = reviews.filter(r => r.is_approved !== true);
@@ -3796,7 +3986,7 @@
             }, 3000);
         }
 
-        function changeAdminPassword() {
+        async function changeAdminPassword() {
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -3821,68 +4011,65 @@
                 return;
             }
 
+            showPasswordMsg('Verifying current password...', 'info');
+
             try {
                 const userEmail = currentUser.email;
-                console.log('Looking for user:', userEmail);
+                console.log('Changing password for:', userEmail);
                 
-                // Check registered_users first (admin is stored here)
-                const registeredUsers = JSON.parse(localStorage.getItem('registered_users') || '{}');
-                let found = false;
+                // First verify current password by trying to sign in
+                const { data: signInData, error: signInError } = await window._sb.auth.signInWithPassword({
+                    email: userEmail,
+                    password: currentPassword
+                });
                 
-                for (const [key, user] of Object.entries(registeredUsers)) {
-                    if (user.email.toLowerCase() === userEmail.toLowerCase()) {
-                        console.log('Found in registered_users:', user);
-                        if (user.password !== currentPassword) {
-                            showPasswordMsg('Current password is incorrect', 'error');
-                            return;
-                        }
-                        user.password = newPassword;
-                        localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
-                        found = true;
-                        break;
-                    }
-                }
-                
-                // Also check customers
-                if (!found) {
-                    const customers = window.authSystem.getCustomers();
-                    const adminIndex = customers.findIndex(c => c.email.toLowerCase() === userEmail.toLowerCase());
-                    
-                    if (adminIndex !== -1) {
-                        if (customers[adminIndex].password !== currentPassword) {
-                            showPasswordMsg('Current password is incorrect', 'error');
-                            return;
-                        }
-                        customers[adminIndex].password = newPassword;
-                        customers[adminIndex].password_changed_at = new Date().toISOString();
-                        window.authSystem.saveCustomers(customers);
-                        found = true;
-                    }
-                }
-
-                if (!found) {
-                    showPasswordMsg('Admin user not found', 'error');
+                if (signInError) {
+                    console.error('Current password verification failed:', signInError);
+                    showPasswordMsg('Current password is incorrect', 'error');
                     return;
                 }
-
-                showPasswordMsg('Password changed successfully!', 'success');
+                
+                console.log('Current password verified, updating...');
+                
+                // Update password using Supabase Auth
+                const { error: updateError } = await window._sb.auth.updateUser({
+                    password: newPassword
+                });
+                
+                if (updateError) {
+                    console.error('Password update failed:', updateError);
+                    showPasswordMsg('Error: ' + updateError.message, 'error');
+                    return;
+                }
+                
+                // Sign out to force re-login with new password
+                await window._sb.auth.signOut();
+                
+                showPasswordMsg('Password changed successfully! Please login again with your new password.', 'success');
 
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
 
-                // Add notification manually
+                // Add notification
                 try {
                     const notifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]');
                     notifications.unshift({
                         id: Date.now(),
                         type: 'password_changed',
-                        message: `Password changed for ${currentUser.email}`,
+                        message: `Password changed for ${userEmail}`,
                         timestamp: new Date().toISOString(),
                         read: false
                     });
                     localStorage.setItem('admin_notifications', JSON.stringify(notifications.slice(0, 50)));
                 } catch(e) {}
+
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'login.html';
+                }, 2000);
 
             } catch (error) {
                 console.error('Password change error:', error);
@@ -3894,8 +4081,17 @@
             const msgBox = document.getElementById('passwordChangeMsg');
             msgBox.textContent = message;
             msgBox.style.display = 'block';
-            msgBox.style.background = type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)';
-            msgBox.style.color = type === 'success' ? '#10b981' : '#ef4444';
+            
+            if (type === 'success') {
+                msgBox.style.background = 'rgba(16,185,129,0.1)';
+                msgBox.style.color = '#10b981';
+            } else if (type === 'info') {
+                msgBox.style.background = 'rgba(59,130,246,0.1)';
+                msgBox.style.color = '#3b82f6';
+            } else {
+                msgBox.style.background = 'rgba(239,68,68,0.1)';
+                msgBox.style.color = '#ef4444';
+            }
             msgBox.style.border = `1px solid ${type === 'success' ? '#10b981' : '#ef4444'}`;
         }
 

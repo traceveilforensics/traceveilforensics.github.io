@@ -259,17 +259,15 @@
                     <p>Professional cybersecurity consulting with affordable pricing and remote delivery. We bridge the gap between enterprise security and business affordability.</p>
                     <div class="footer-newsletter">
                         <h5>Stay Updated on Security Threats</h5>
-                        <form class="footer-newsletter-form" onsubmit="event.preventDefault(); alert('Newsletter signup coming soon!');">
-                            <input type="email" placeholder="Enter your email" required>
-                            <button type="submit">Subscribe</button>
+                        <form class="footer-newsletter-form" id="newsletterForm" onsubmit="return handleNewsletterSubmit(event)">
+                            <input type="email" id="newsletterEmail" placeholder="Enter your email" required>
+                            <button type="submit" id="newsletterBtn">Subscribe</button>
                         </form>
+                        <p id="newsletterMsg" style="font-size: 12px; margin-top: 8px; display: none;"></p>
                     </div>
                     <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
                         <a href="Trace_Veil_Forensics.apk" download style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #3ddc84, #28b571); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">
                             <i class="fab fa-android"></i> Android
-                        </a>
-                        <a href="#" onclick="alert('For iPhone: Open this page in Safari, tap Share, then tap Add to Home Screen'); return false;" style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: linear-gradient(135deg, #007AFF, #0056b3); color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600;">
-                            <i class="fab fa-apple"></i> iOS
                         </a>
                     </div>
                 </div>
@@ -343,6 +341,7 @@
     </footer>
 
     <!-- JavaScript -->
+    <script src="security.js"></script>
     <script src="shared.js"></script>
     <script>
         // Immediate setup
@@ -420,6 +419,72 @@
                 }
             });
         });
+
+        // Newsletter subscription
+        async function handleNewsletterSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('newsletterEmail').value;
+            const btn = document.getElementById('newsletterBtn');
+            const msg = document.getElementById('newsletterMsg');
+            
+            if (!email) return false;
+            
+            btn.disabled = true;
+            btn.textContent = 'Subscribing...';
+            msg.style.display = 'none';
+            
+            try {
+                // Direct Supabase call
+                const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
+                const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
+                
+                console.log('Subscribing:', email);
+                
+                const response = await fetch(`${SB_URL}/rest/v1/newsletter_subscribers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SB_SVC,
+                        'Authorization': 'Bearer ' + SB_SVC,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        is_active: true
+                    })
+                });
+                
+                console.log('Response status:', response.status);
+                const responseText = await response.text();
+                console.log('Response:', responseText);
+                
+                msg.style.display = 'block';
+                
+                if (response.status === 201) {
+                    msg.style.color = '#10b981';
+                    msg.textContent = 'Successfully subscribed! Thank you.';
+                    document.getElementById('newsletterEmail').value = '';
+                } else if (response.status === 409 || responseText.includes('duplicate')) {
+                    msg.style.color = '#f59e0b';
+                    msg.textContent = 'You are already subscribed!';
+                } else if (responseText.includes('relation') && responseText.includes('does not exist')) {
+                    msg.style.color = '#ef4444';
+                    msg.textContent = 'Newsletter not configured yet. Please try later.';
+                } else {
+                    msg.style.color = '#ef4444';
+                    msg.textContent = 'Something went wrong. Please try again.';
+                }
+            } catch (err) {
+                console.error('Newsletter error:', err);
+                msg.style.display = 'block';
+                msg.style.color = '#ef4444';
+                msg.textContent = 'Connection error. Please try again.';
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Subscribe';
+            return false;
+        }
     </script>
 </body>
 </html>

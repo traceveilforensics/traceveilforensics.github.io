@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleanup Duplicate Customers</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        h1 { color: #333; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .section h2 { margin-top: 0; color: #555; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #dc3545; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #c82333; }
+        button.secondary { background: #28a745; }
+        button.secondary:hover { background: #218838; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .duplicate { background-color: #ffe6e6; }
+        #output { background: #f5f5f5; padding: 15px; border-radius: 5px; white-space: pre-wrap; font-family: monospace; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Cleanup Duplicate Customers</h1>
+    
+    <div class="section">
+        <h2>1. Find Duplicates</h2>
+        <button onclick="findDuplicates()" class="secondary">Find Duplicate Emails</button>
+        <button onclick="findAllCustomers()">Show All Customers</button>
+        <div id="duplicatesList"></div>
+    </div>
+    
+    <div class="section">
+        <h2>2. Delete Selected Duplicates</h2>
+        <p>Select which duplicate to keep (the first one will be kept by default)</p>
+        <button onclick="deleteDuplicates()">Delete Duplicates (Keep First)</button>
+        <div id="deleteOutput"></div>
+    </div>
+    
+    <div class="section">
+        <h2>3. Results</h2>
+        <div id="output"></div>
+    </div>
+    
+    <script>
+        let allCustomers = [];
+        let duplicateGroups = {};
+        
+        function log(message, type = 'info') {
+            const el = document.getElementById('output');
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            el.innerHTML = `<div class="${className}">${new Date().toLocaleTimeString()}: ${message}</div>` + el.innerHTML;
+        }
+        
+        async function findAllCustomers() {
+            log('Fetching all customers...', 'info');
+            
+            try {
+                await window.authSystem.waitForReady();
+                allCustomers = window.authSystem.getCustomers();
+                
+                let html = `<table>
+                    <tr>
+                        <th>ID</th>
+                        <th>Email</th>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Company</th>
+                        <th>Created</th>
+                    </tr>`;
+                
+                allCustomers.forEach(c => {
+                    html += `<tr>
+                        <td>${c.id}</td>
+                        <td>${c.email}</td>
+                        <td>${c.first_name || ''}</td>
+                        <td>${c.last_name || ''}</td>
+                        <td>${c.company_name || ''}</td>
+                        <td>${c.created_at || 'N/A'}</td>
+                    </tr>`;
+                });
+                
+                html += '</table>';
+                document.getElementById('duplicatesList').innerHTML = html;
+                
+                log(`Found ${allCustomers.length} customers`, 'success');
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+            }
+        }
+        
+        async function findDuplicates() {
+            log('Finding duplicates...', 'info');
+            
+            try {
+                await window.authSystem.waitForReady();
+                allCustomers = window.authSystem.getCustomers();
+                
+                duplicateGroups = {};
+                
+                allCustomers.forEach(customer => {
+                    const email = customer.email?.toLowerCase().trim();
+                    if (email) {
+                        if (!duplicateGroups[email]) {
+                            duplicateGroups[email] = [];
+                        }
+                        duplicateGroups[email].push(customer);
+                    }
+                });
+                
+                // Filter to only duplicates
+                const duplicates = {};
+                for (const [email, customers] of Object.entries(duplicateGroups)) {
+                    if (customers.length > 1) {
+                        duplicates[email] = customers;
+                    }
+                }
+                
+                let html = `<h3>Found ${Object.keys(duplicates).length} emails with duplicates:</h3>`;
+                html += `<table>
+                    <tr>
+                        <th>Email</th>
+                        <th>Count</th>
+                        <th>IDs</th>
+                    </tr>`;
+                
+                for (const [email, customers] of Object.entries(duplicates)) {
+                    const ids = customers.map(c => c.id).join(', ');
+                    html += `<tr class="duplicate">
+                        <td>${email}</td>
+                        <td>${customers.length}</td>
+                        <td>${ids}</td>
+                    </tr>`;
+                }
+                
+                html += '</table>';
+                document.getElementById('duplicatesList').innerHTML = html;
+                
+                log(`Found ${Object.keys(duplicates).length} duplicate emails`, 'success');
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+            }
+        }
+        
+        async function deleteDuplicates() {
+            log('Starting duplicate deletion...', 'info');
+            
+            try {
+                await window.authSystem.waitForReady();
+                
+                // Re-fetch to get current state
+                allCustomers = window.authSystem.getCustomers();
+                
+                duplicateGroups = {};
+                
+                allCustomers.forEach(customer => {
+                    const email = customer.email?.toLowerCase().trim();
+                    if (email) {
+                        if (!duplicateGroups[email]) {
+                            duplicateGroups[email] = [];
+                        }
+                        duplicateGroups[email].push(customer);
+                    }
+                });
+                
+                let deletedCount = 0;
+                
+                for (const [email, customers] of Object.entries(duplicateGroups)) {
+                    if (customers.length > 1) {
+                        // Keep the first one, delete the rest
+                        const toKeep = customers[0];
+                        const toDelete = customers.slice(1);
+                        
+                        log(`Processing ${email}: keeping ID ${toKeep.id}, deleting ${toDelete.length} duplicates`, 'info');
+                        
+                        for (const dup of toDelete) {
+                            try {
+                                const result = await window.authSystem.deleteCustomer(dup.id);
+                                if (result.success) {
+                                    log(`Deleted duplicate customer ID: ${dup.id}`, 'success');
+                                    deletedCount++;
+                                } else {
+                                    log(`Failed to delete ${dup.id}: ${result.error}`, 'error');
+                                }
+                            } catch (err) {
+                                log(`Error deleting ${dup.id}: ${err.message}`, 'error');
+                            }
+                        }
+                    }
+                }
+                
+                log(`Cleanup complete! Deleted ${deletedCount} duplicate customers`, 'success');
+                
+                // Refresh the list
+                await findAllCustomers();
+            } catch (err) {
+                log(`Error: ${err.message}`, 'error');
+            }
+        }
+        
+        // Wait for auth system to be ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            await window.authSystem.waitForReady();
+            log('Auth system ready', 'success');
+        });
+    </script>
+</body>
+</html>

@@ -1,13 +1,38 @@
+# Sensitive files - NEVER commit
+.env
+.env.local
+.env.production
+.env.*.local
+*.key
+*.pem
+
+# Test and debug files - NOT for production
+test-*.html
+debug-*.html
+test-*.js
+debug-*.js
+check-*.js
+create-admin*.js
+clear-session.html
+quick-login.html
+login-test.html
+tlogin.html
+disable-rls.js
+fix-db-schema.js
+verify-supabase.js
+simple-admin*.html
+minimal-admin.html
+super-simple.html
+simple-test.html
+no-blink.html
+auth.js.bak
+verify-data-source.html
+
 # Dependencies
 node_modules/
 
 # Build outputs
 .netlify/
-
-# Environment files (keep .env.example)
-.env
-.env.local
-.env.*.local
 
 # OS files
 .DS_Store
@@ -20,6 +45,7 @@ Thumbs.db
 *.swo
 
 # Logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -32,5 +58,4 @@ coverage/
 *.sqlite
 
 # Misc
-*.log
 cookies.txt
