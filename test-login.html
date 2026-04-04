@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Login | Trace Veil</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="auth.js"></script>
+</head>
+<body style="font-family: monospace; padding: 20px; background: #0A1628; color: white;">
+    <h1>Test Login</h1>
+    <div id="status" style="margin: 20px 0; padding: 15px; background: #1E3A5F; border-radius: 8px;"></div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>Email:</label><br>
+        <input type="email" id="email" value="test@test.com" style="padding: 10px; width: 300px; border-radius: 4px; border: none;">
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>Password:</label><br>
+        <input type="password" id="password" value="test1234" style="padding: 10px; width: 300px; border-radius: 4px; border: none;">
+    </div>
+    
+    <button onclick="doTestLogin()" style="padding: 15px 30px; background: #FFD700; border: none; cursor: pointer; font-size: 16px; border-radius: 4px;">
+        Test Login
+    </button>
+    
+    <div id="result" style="margin-top: 20px; padding: 15px; background: #121a2e; border-radius: 8px; white-space: pre-wrap;"></div>
+    
+    <div style="margin-top: 20px;">
+        <h3>Debug Info:</h3>
+        <div id="debug"></div>
+    </div>
+
+    <script>
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('result').textContent += msg + '\n';
+        }
+        
+        function updateStatus(msg) {
+            document.getElementById('status').textContent = msg;
+        }
+        
+        function showDebug() {
+            document.getElementById('debug').innerHTML = 
+                'localStorage token: ' + (localStorage.getItem('token') || 'EMPTY') + '<br>' +
+                'localStorage user: ' + (localStorage.getItem('user') || 'EMPTY') + '<br>' +
+                'sessionStorage token: ' + (sessionStorage.getItem('token') || 'EMPTY') + '<br>' +
+                'sessionStorage user: ' + (sessionStorage.getItem('user') || 'EMPTY') + '<br>' +
+                'authSystem ready: ' + (window.authSystem ? 'YES' : 'NO');
+        }
+        
+        async function doTestLogin() {
+            log('Starting test login...');
+            updateStatus('Waiting for authSystem...');
+            showDebug();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!window.authSystem) {
+                log('ERROR: authSystem not loaded!');
+                updateStatus('ERROR: authSystem not loaded');
+                return;
+            }
+            
+            await window.authSystem.waitForReady();
+            log('authSystem ready');
+            updateStatus('authSystem ready - attempting login...');
+            
+            log('Calling login(' + email + ', ****)');
+            const result = await window.authSystem.login(email, password);
+            
+            log('Result: ' + JSON.stringify(result, null, 2));
+            updateStatus('Login complete');
+            
+            if (result.success) {
+                log('Login SUCCESS!');
+                log('User object: ' + JSON.stringify(result.user, null, 2));
+                
+                // Check what's actually in localStorage
+                const storedUser = localStorage.getItem('user');
+                const storedToken = localStorage.getItem('token');
+                log('localStorage user: ' + storedUser);
+                log('localStorage token: ' + storedToken);
+                
+                // Try to get user from authSystem
+                const currentUser = window.authSystem.getCurrentUser();
+                log('authSystem.getCurrentUser(): ' + JSON.stringify(currentUser));
+                
+                updateStatus('SUCCESS - click button below to go to dashboard');
+                
+                const btn = document.createElement('button');
+                btn.textContent = 'Go to Dashboard';
+                btn.style.cssText = 'padding: 15px 30px; background: #10b981; border: none; cursor: pointer; font-size: 16px; border-radius: 4px; margin-top: 10px;';
+                btn.onclick = () => window.location.href = 'customer-dashboard.html';
+                document.getElementById('result').appendChild(btn);
+            } else {
+                log('Login FAILED: ' + result.error);
+                updateStatus('LOGIN FAILED: ' + result.error);
+            }
+            
+            showDebug();
+        }
+        
+        // Show initial debug
+        showDebug();
+        updateStatus('Page loaded - enter credentials and click Test Login');
+    </script>
+</body>
+</html>
