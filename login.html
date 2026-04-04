@@ -121,9 +121,9 @@
                 console.log('Login result:', JSON.stringify(result));
                 
                 if (result.success) {
-                    const storage = remember ? localStorage : sessionStorage;
-                    storage.setItem('token', 'supabase-session');
-                    storage.setItem('user', JSON.stringify(result.user));
+                    // Always save to localStorage for consistency
+                    localStorage.setItem('token', 'supabase-session');
+                    localStorage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
                     console.log('Saved to storage. Checking user object:');
