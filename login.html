@@ -6,6 +6,8 @@
     <meta name="google-site-verification" content="aEP6t_GrgeN7y6FnKApqom2a-SuPuz_gue4Dt66R7hQ">
     <title>Login | Trace Veil Forensics</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -88,25 +90,8 @@
         const btn = document.getElementById('loginBtn');
         const errorMsg = document.getElementById('errorMsg');
         
-        // Wait for authSystem to be ready
-        async function waitForAuth() {
-            if (typeof window.authSystem === 'undefined') {
-                console.error('authSystem not loaded');
-                errorMsg.textContent = 'Authentication system not loaded. Please refresh the page.';
-                errorMsg.classList.add('show');
-                return false;
-            }
-            
-            await window.authSystem.waitForReady();
-            return true;
-        }
-        
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const ready = await waitForAuth();
-            if (!ready) return;
-            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
@@ -116,18 +101,12 @@
             errorMsg.classList.remove('show');
             
             try {
-                console.log('Attempting login for:', email);
                 const result = await window.authSystem.login(email, password);
-                console.log('Login result:', JSON.stringify(result));
                 
                 if (result.success) {
-                    // Always save to localStorage for consistency
                     localStorage.setItem('token', 'supabase-session');
                     localStorage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
-                    
-                    console.log('Saved to storage. Checking user object:');
-                    console.log('localStorage user:', localStorage.getItem('user'));
                     
                     if (result.user.role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
@@ -135,12 +114,10 @@
                         window.location.href = 'customer-dashboard.html';
                     }
                 } else {
-                    console.log('Login failed with error:', result.error);
-                    errorMsg.textContent = result.error || 'Login failed. Please check your credentials.';
+                    errorMsg.textContent = result.error || 'Login failed';
                     errorMsg.classList.add('show');
                 }
             } catch (err) {
-                console.error('Login error:', err);
                 errorMsg.textContent = 'An error occurred. Please try again.';
                 errorMsg.classList.add('show');
             } finally {
@@ -150,13 +127,10 @@
         });
         
         // Redirect if already logged in
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (window.authSystem) {
-                await window.authSystem.waitForReady();
-                if (window.authSystem.isAuthenticated()) {
-                    const user = window.authSystem.getCurrentUser();
-                    window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.authSystem && window.authSystem.isAuthenticated()) {
+                const user = window.authSystem.getCurrentUser();
+                window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
             }
         });
     </script>
