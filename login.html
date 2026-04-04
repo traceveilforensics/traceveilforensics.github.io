@@ -6,8 +6,6 @@
     <meta name="google-site-verification" content="aEP6t_GrgeN7y6FnKApqom2a-SuPuz_gue4Dt66R7hQ">
     <title>Login | Trace Veil Forensics</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="shortcut icon" href="favicon.ico">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -104,8 +102,9 @@
                 const result = await window.authSystem.login(email, password);
                 
                 if (result.success) {
-                    localStorage.setItem('token', 'supabase-session');
-                    localStorage.setItem('user', JSON.stringify(result.user));
+                    const storage = remember ? localStorage : sessionStorage;
+                    storage.setItem('token', 'supabase-session');
+                    storage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
                     if (result.user.role === 'admin') {

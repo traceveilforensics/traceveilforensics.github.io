@@ -6,7 +6,7 @@
     <meta name="google-site-verification" content="aEP6t_GrgeN7y6FnKApqom2a-SuPuz_gue4Dt66R7hQ">
     <title>Register | Trace Veil Forensics</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -256,17 +256,6 @@
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
 
-        async function waitForAuth() {
-            if (typeof window.authSystem === 'undefined') {
-                console.error('authSystem not loaded');
-                errorMessage.textContent = 'Authentication system not loaded. Please refresh the page.';
-                errorMessage.style.display = 'block';
-                return false;
-            }
-            await window.authSystem.waitForReady();
-            return true;
-        }
-
         function checkPasswordStrength(password) {
             let strength = 0;
             if (password.length >= 8) strength++;
@@ -293,9 +282,6 @@
 
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const ready = await waitForAuth();
-            if (!ready) return;
 
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
