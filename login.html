@@ -118,7 +118,7 @@
             try {
                 console.log('Attempting login for:', email);
                 const result = await window.authSystem.login(email, password);
-                console.log('Login result:', result);
+                console.log('Login result:', JSON.stringify(result));
                 
                 if (result.success) {
                     const storage = remember ? localStorage : sessionStorage;
@@ -126,7 +126,8 @@
                     storage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
-                    console.log('Login success, user role:', result.user.role);
+                    console.log('Saved to storage. Checking user object:');
+                    console.log('localStorage user:', localStorage.getItem('user'));
                     
                     if (result.user.role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
@@ -134,6 +135,7 @@
                         window.location.href = 'customer-dashboard.html';
                     }
                 } else {
+                    console.log('Login failed with error:', result.error);
                     errorMsg.textContent = result.error || 'Login failed. Please check your credentials.';
                     errorMsg.classList.add('show');
                 }
