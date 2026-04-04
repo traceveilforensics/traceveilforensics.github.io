@@ -665,8 +665,6 @@ function saveServices(services) {
     _cache.services = services;
 }
 
-
-
 // Pricing CRUD
 function savePricing(pricing) {
     _cache.pricing = pricing;
@@ -679,31 +677,8 @@ function generateInvoiceNumber() {
     return `INV-${year}-${String(count).padStart(4, '0')}`;
 }
 
-
-
 function saveInvoices(invoices) {
     _cache.invoices = invoices;
-}
-
-async function updateInvoice(id, data) {
-    try {
-        const response = await fetch(`${SB_URL}/rest/v1/invoices?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) throw new Error('Failed to update invoice');
-        await loadAllData();
-        return { success: true };
-    } catch (e) {
-        console.error('Error updating invoice:', e);
-        return { success: false, error: e.message };
-    }
 }
 
 // Service Requests

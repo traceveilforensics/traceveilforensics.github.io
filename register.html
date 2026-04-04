@@ -256,6 +256,17 @@
         const errorMessage = document.getElementById('errorMessage');
         const successMessage = document.getElementById('successMessage');
 
+        async function waitForAuth() {
+            if (typeof window.authSystem === 'undefined') {
+                console.error('authSystem not loaded');
+                errorMessage.textContent = 'Authentication system not loaded. Please refresh the page.';
+                errorMessage.style.display = 'block';
+                return false;
+            }
+            await window.authSystem.waitForReady();
+            return true;
+        }
+
         function checkPasswordStrength(password) {
             let strength = 0;
             if (password.length >= 8) strength++;
@@ -282,6 +293,9 @@
 
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const ready = await waitForAuth();
+            if (!ready) return;
 
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
