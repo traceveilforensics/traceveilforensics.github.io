@@ -995,23 +995,37 @@
         let currentUser = null;
 
         async function init() {
+            console.log('Dashboard init starting...');
+            
+            // Wait for authSystem to be ready first
+            if (typeof window.authSystem === 'undefined') {
+                console.error('authSystem not loaded');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            await window.authSystem.waitForReady();
+            
             let token = localStorage.getItem('token');
             let user = localStorage.getItem('user');
+            
+            console.log('Checking localStorage - token:', !!token, 'user:', !!user);
             
             if (!token) {
                 token = sessionStorage.getItem('token');
                 user = sessionStorage.getItem('user');
+                console.log('Checking sessionStorage - token:', !!token, 'user:', !!user);
             }
 
             if (!token || !user) {
+                console.log('No auth found, redirecting to login');
                 window.location.href = 'login.html';
                 return;
             }
 
             currentUser = JSON.parse(user);
+            console.log('User loaded:', currentUser.email, 'role:', currentUser.role);
             document.getElementById('welcomeText').textContent = `Welcome back, ${currentUser.first_name || currentUser.email}!`;
-
-            await window.authSystem.waitForReady();
             setupNavigation();
             loadOverview();
         }

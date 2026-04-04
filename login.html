@@ -126,6 +126,8 @@
                     storage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
+                    console.log('Login success, user role:', result.user.role);
+                    
                     if (result.user.role === 'admin') {
                         window.location.href = 'admin-dashboard.html';
                     } else {
