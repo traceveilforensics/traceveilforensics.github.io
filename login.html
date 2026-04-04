@@ -92,7 +92,6 @@
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const remember = document.getElementById('remember').checked;
             
             btn.disabled = true;
             btn.innerHTML = '<span>Signing in...</span><span class="spinner"></span>';
@@ -102,9 +101,8 @@
                 const result = await window.authSystem.login(email, password);
                 
                 if (result.success) {
-                    const storage = remember ? localStorage : sessionStorage;
-                    storage.setItem('token', 'supabase-session');
-                    storage.setItem('user', JSON.stringify(result.user));
+                    localStorage.setItem('token', 'supabase-session');
+                    localStorage.setItem('user', JSON.stringify(result.user));
                     localStorage.setItem('loginTime', Date.now());
                     
                     if (result.user.role === 'admin') {
