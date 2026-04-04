@@ -88,8 +88,25 @@
         const btn = document.getElementById('loginBtn');
         const errorMsg = document.getElementById('errorMsg');
         
+        // Wait for authSystem to be ready
+        async function waitForAuth() {
+            if (typeof window.authSystem === 'undefined') {
+                console.error('authSystem not loaded');
+                errorMsg.textContent = 'Authentication system not loaded. Please refresh the page.';
+                errorMsg.classList.add('show');
+                return false;
+            }
+            
+            await window.authSystem.waitForReady();
+            return true;
+        }
+        
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const ready = await waitForAuth();
+            if (!ready) return;
+            
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
@@ -99,7 +116,9 @@
             errorMsg.classList.remove('show');
             
             try {
+                console.log('Attempting login for:', email);
                 const result = await window.authSystem.login(email, password);
+                console.log('Login result:', result);
                 
                 if (result.success) {
                     const storage = remember ? localStorage : sessionStorage;
@@ -113,10 +132,11 @@
                         window.location.href = 'customer-dashboard.html';
                     }
                 } else {
-                    errorMsg.textContent = result.error || 'Login failed';
+                    errorMsg.textContent = result.error || 'Login failed. Please check your credentials.';
                     errorMsg.classList.add('show');
                 }
             } catch (err) {
+                console.error('Login error:', err);
                 errorMsg.textContent = 'An error occurred. Please try again.';
                 errorMsg.classList.add('show');
             } finally {
@@ -126,10 +146,13 @@
         });
         
         // Redirect if already logged in
-        document.addEventListener('DOMContentLoaded', () => {
-            if (window.authSystem && window.authSystem.isAuthenticated()) {
-                const user = window.authSystem.getCurrentUser();
-                window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.authSystem) {
+                await window.authSystem.waitForReady();
+                if (window.authSystem.isAuthenticated()) {
+                    const user = window.authSystem.getCurrentUser();
+                    window.location.href = user.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
+                }
             }
         });
     </script>
