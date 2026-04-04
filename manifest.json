@@ -1,6 +1,6 @@
 {
   "name": "Trace Veil Forensics",
-  "short_name": "Trace Veil",
+  "short_name": "Trace Veil Forensics",
   "description": "Professional cybersecurity consulting services",
   "start_url": "/",
   "display": "standalone",
@@ -48,5 +48,12 @@
   ],
   "categories": ["business", "productivity"],
   "lang": "en",
-  "dir": "ltr"
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "url": "/customer-dashboard.html",
+      "description": "Access your dashboard"
+    }
+  ]
 }
