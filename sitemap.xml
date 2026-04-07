@@ -3,59 +3,59 @@
    <url>
       <loc>https://traceveilforensics.pages.dev/</loc>
       <lastmod>2026-04-07</lastmod>
-      <changefreq>monthly</changefreq>
+      <changefreq>weekly</changefreq>
       <priority>1.0</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/services.html</loc>
+      <loc>https://traceveilforensics.pages.dev/services</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.9</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/about.html</loc>
+      <loc>https://traceveilforensics.pages.dev/about</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/pricing.html</loc>
+      <loc>https://traceveilforensics.pages.dev/pricing</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/contact.html</loc>
+      <loc>https://traceveilforensics.pages.dev/contact</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>monthly</changefreq>
       <priority>0.8</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/login.html</loc>
+      <loc>https://traceveilforensics.pages.dev/login</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.5</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/register.html</loc>
+      <loc>https://traceveilforensics.pages.dev/register</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.5</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/privacy-policy.html</loc>
+      <loc>https://traceveilforensics.pages.dev/privacy-policy</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/terms-of-service.html</loc>
+      <loc>https://traceveilforensics.pages.dev/terms-of-service</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
    </url>
    <url>
-      <loc>https://traceveilforensics.pages.dev/service-agreement.html</loc>
+      <loc>https://traceveilforensics.pages.dev/service-agreement</loc>
       <lastmod>2026-04-07</lastmod>
       <changefreq>yearly</changefreq>
       <priority>0.3</priority>
