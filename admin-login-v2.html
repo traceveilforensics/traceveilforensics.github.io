@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login v2</title>
+    <script>
+        if (window.console) { ['log', 'warn', 'error', 'info', 'debug', 'table', 'clear'].forEach(m => console[m] = function() {}); }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) { if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) return false; };
+        window.eval = function() { throw new Error('Code execution disabled'); };
+    </script>
     <style>
         body { font-family: Arial; background: #0A1628; color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .box { background: white; color: #333; padding: 40px; border-radius: 12px; width: 350px; }
