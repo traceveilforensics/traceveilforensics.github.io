@@ -3,6 +3,22 @@ const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
 const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY';
 const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
 
+// All valid production URLs for redirects
+const VALID_REDIRECT_URLS = [
+    'https://traceveilforensics.netlify.app',
+    'https://traceveilforensics.pages.dev'
+];
+
+// Get current valid redirect URL based on current hostname
+function getRedirectUrl(path = '/reset-password.html') {
+    const currentOrigin = window.location.origin;
+    // Use current origin if it's in our valid URLs, otherwise default to Netlify
+    if (VALID_REDIRECT_URLS.includes(currentOrigin)) {
+        return currentOrigin + path;
+    }
+    return VALID_REDIRECT_URLS[0] + path;
+}
+
 let _sb = null;
 let _cache = { services: [], pricing: [], customers: [], invoices: [], requests: [], reviews: [] };
 let _ready = false;
@@ -1064,7 +1080,7 @@ async function requestPasswordReset(email) {
         console.log('Requesting password reset for:', email);
         
         const { error } = await _sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password.html'
+            redirectTo: getRedirectUrl('/reset-password.html')
         });
         
         if (error) {
@@ -1130,7 +1146,7 @@ async function updateCustomerPassword(customerId, newPassword) {
 async function resetCustomerPassword(email) {
     try {
         const { error } = await _sb.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + '/reset-password.html'
+            redirectTo: getRedirectUrl('/reset-password.html')
         });
         if (error) return { success: false, error: error.message };
         return { success: true, message: 'Password reset email sent to ' + email };

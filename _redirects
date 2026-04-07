@@ -1,14 +1,11 @@
-/api/* /.netlify/functions/:splat 200
-/admin /* /admin-dashboard 200
-/customer /* /customer-dashboard 200
-/about /about.html 200
-/services /services.html 200
-/pricing /pricing.html 200
-/contact /contact.html 200
-/terms-of-service /terms-of-service.html 200
-/privacy-policy /privacy-policy.html 200
-/service-agreement /service-agreement.html 200
-/login /login.html 200
-/register /register.html 200
-/forgot-password /forgot-password.html 200
-/reset-password /reset-password.html 200
+about /about.html 302
+services /services.html 302
+pricing /pricing.html 302
+contact /contact.html 302
+terms-of-service /terms-of-service.html 302
+privacy-policy /privacy-policy.html 302
+service-agreement /service-agreement.html 302
+login /login.html 302
+register /register.html 302
+forgot-password /forgot-password.html 302
+reset-password /reset-password.html 302
