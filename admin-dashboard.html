@@ -14,14 +14,41 @@
     <script src="auth.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
+        // Disable console to prevent Self-XSS attacks
+        if (window.console) {
+            ['log', 'warn', 'error', 'info', 'debug', 'table', 'clear'].forEach(method => {
+                console[method] = function() {};
+            });
+            Object.defineProperty(console, 'memory', { get: function() { return {}; } });
+        }
+        
+        // Prevent right-click context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Prevent keyboard shortcuts to open DevTools
+        document.onkeydown = function(e) {
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                (e.ctrlKey && e.key === 'u')) return false;
+        };
+        
+        // Detect DevTools opening
+        window.onresize = function() { 
+            if (window.outerWidth - window.innerWidth > 100 || 
+                window.outerHeight - window.innerHeight > 100) { 
+                document.body.innerHTML = '<div style="display:none"></div>'; 
+            } 
+        };
+        
+        // Override eval to prevent code injection
+        window.eval = function() { throw new Error('Code execution disabled'); };
+        
         // Initialize EmailJS
         (function() {
             try {
                 emailjs.init("4iUdRTWOtX5Ix-OPK");
-                console.log('EmailJS initialized');
-            } catch(e) {
-                console.log('EmailJS init error:', e);
-            }
+            } catch(e) {}
         })();
     </script>
     <style>

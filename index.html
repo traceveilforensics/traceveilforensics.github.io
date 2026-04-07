@@ -26,11 +26,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script>
+        // Disable console to prevent Self-XSS attacks
+        if (window.console) {
+            ['log', 'warn', 'error', 'info', 'debug', 'table', 'clear'].forEach(method => {
+                console[method] = function() {};
+            });
+            Object.defineProperty(console, 'memory', { get: function() { return {}; } });
+        }
+        
+        // Prevent right-click context menu
         document.addEventListener('contextmenu', e => e.preventDefault());
+        
+        // Prevent keyboard shortcuts to open DevTools
         document.onkeydown = function(e) {
-            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) return false;
+            if (e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && e.key === 'I') || 
+                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                (e.ctrlKey && e.key === 'u')) return false;
         };
-        window.onresize = function() { if (window.outerWidth - window.innerWidth > 100 || window.outerHeight - window.innerHeight > 100) { document.body.innerHTML = ''; } };
+        
+        // Detect DevTools opening
+        window.onresize = function() { 
+            if (window.outerWidth - window.innerWidth > 100 || 
+                window.outerHeight - window.innerHeight > 100) { 
+                document.body.innerHTML = '<div style="display:none"></div>'; 
+            } 
+        };
+        
+        // Override eval to prevent code injection
+        window.eval = function() { throw new Error('Code execution disabled'); };
     </script>
 </head>
 <body>

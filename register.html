@@ -11,6 +11,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="auth.js"></script>
+    <script>
+        // Disable console to prevent Self-XSS attacks
+        if (window.console) {
+            ['log', 'warn', 'error', 'info', 'debug', 'table', 'clear'].forEach(method => {
+                console[method] = function() {};
+            });
+        }
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.onkeydown = function(e) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) return false;
+        };
+        window.eval = function() { throw new Error('Code execution disabled'); };
+    </script>
     <style>
         .auth-container {
             min-height: 100vh;
