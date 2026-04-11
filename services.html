@@ -218,6 +218,25 @@
                     <p>Comprehensive cybersecurity training programs for employees, including phishing awareness, secure coding practices, and incident response procedures.</p>
                     <p>We offer phishing awareness training, security best practices education, policy development guidance, and hands-on security training for your team.</p>
                     <a href="contact.html" class="btn btn-primary">Get Training</a>
+                    
+                    <!-- Share Buttons -->
+                    <div class="share-buttons" style="margin-top: 20px;">
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Share this service:</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="#" onclick="shareToTwitter('Digital Forensics Services - Contact Trace Veil Forensics for professional digital forensics and investigation support. #cybersecurity #forensics', 'https://traceveilforensics.pages.dev/services.html'); return false;" class="btn btn-sm" style="background: #000; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px;">
+                                <i class="fab fa-x-twitter"></i> Share on X
+                            </a>
+                            <a href="#" onclick="shareToFacebook('https://traceveilforensics.pages.dev/services.html'); return false;" class="btn btn-sm" style="background: #1877F2; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px;">
+                                <i class="fab fa-facebook-f"></i> Share
+                            </a>
+                            <a href="#" onclick="shareToLinkedIn('https://traceveilforensics.pages.dev/services.html', 'Digital Forensics Services by Trace Veil Forensics', 'Professional digital forensics and investigation support for businesses.'); return false;" class="btn btn-sm" style="background: #0A66C2; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px;">
+                                <i class="fab fa-linkedin-in"></i> Share
+                            </a>
+                            <a href="#" onclick="shareViaWhatsApp('Check out these cybersecurity services from Trace Veil Forensics! https://traceveilforensics.pages.dev/services.html'); return false;" class="btn btn-sm" style="background: #25D366; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px;">
+                                <i class="fab fa-whatsapp"></i> Share
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div class="service-row-image">
                     <img src="images/Training.png" alt="Training & Awareness">
@@ -416,6 +435,23 @@
                 checkAuth();
             }
         });
+        
+        // Social Share Functions
+        function shareToTwitter(text, url) {
+            window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank');
+        }
+        
+        function shareToFacebook(url) {
+            window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url), '_blank');
+        }
+        
+        function shareToLinkedIn(url, title, summary) {
+            window.open('https://www.linkedin.com/shareArticle?mini=true&url=' + encodeURIComponent(url) + '&title=' + encodeURIComponent(title) + '&summary=' + encodeURIComponent(summary), '_blank');
+        }
+        
+        function shareViaWhatsApp(message) {
+            window.open('https://wa.me/?text=' + encodeURIComponent(message), '_blank');
+        }
     </script>
 </body>
 </html>
