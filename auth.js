@@ -9,6 +9,33 @@ const VALID_REDIRECT_URLS = [
     'https://traceveilforensics.pages.dev'
 ];
 
+// Make.com webhook URLs - REPLACE with your Make.com webhook URLs
+const MAKE_WEBHOOKS = {
+    new_customer: '',      // Add your Make.com webhook for new customer
+    new_request: '',       // Add your Make.com webhook for new service request
+    new_review: ''         // Add your Make.com webhook for new review
+};
+
+// Send webhook to Make.com
+async function sendWebhook(eventType, data) {
+    const webhookUrl = MAKE_WEBHOOKS[eventType];
+    if (!webhookUrl) return;
+    
+    try {
+        await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: eventType,
+                timestamp: new Date().toISOString(),
+                data: data
+            })
+        });
+    } catch (e) {
+        console.error('Webhook error:', e);
+    }
+}
+
 // Get current valid redirect URL based on current hostname
 function getRedirectUrl(path = '/reset-password.html') {
     const currentOrigin = window.location.origin;
@@ -216,6 +243,10 @@ async function addCustomer(data) {
         
         if (!response.ok) throw new Error('Failed to add customer');
         await loadAllData();
+        
+        // Trigger Make.com webhook for new customer
+        sendWebhook('new_customer', { email: data.email, name: data.first_name + ' ' + data.last_name });
+        
         return { success: true };
     } catch (e) {
         console.error('Error adding customer:', e);
@@ -644,6 +675,10 @@ async function addReview(data) {
         
         if (!response.ok) throw new Error('Failed to add review');
         await loadAllData();
+        
+        // Trigger Make.com webhook for new review
+        sendWebhook('new_review', { rating: data.rating, comment: data.comment });
+        
         return { success: true };
     } catch (e) {
         console.error('Error adding review:', e);
@@ -764,6 +799,10 @@ async function addServiceRequest(data) {
         console.log('Service request added successfully:', result);
         
         await loadAllData();
+        
+        // Trigger Make.com webhook for new request
+        sendWebhook('new_request', { service: data.service_name, customer: data.customer_email });
+        
         return { success: true, data: result };
     } catch (e) {
         console.error('Error adding service request:', e);
