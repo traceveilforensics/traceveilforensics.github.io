@@ -26,37 +26,7 @@
     <meta name="theme-color" content="#0A1628">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script>
-        // Disable console to prevent Self-XSS attacks
-        if (window.console) {
-            ['log', 'warn', 'error', 'info', 'debug', 'table', 'clear'].forEach(method => {
-                console[method] = function() {};
-            });
-            Object.defineProperty(console, 'memory', { get: function() { return {}; } });
-        }
-        
-        // Prevent right-click context menu
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        
-        // Prevent keyboard shortcuts to open DevTools
-        document.onkeydown = function(e) {
-            if (e.key === 'F12' || 
-                (e.ctrlKey && e.shiftKey && e.key === 'I') || 
-                (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-                (e.ctrlKey && e.key === 'u')) return false;
-        };
-        
-        // Detect DevTools opening
-        window.onresize = function() { 
-            if (window.outerWidth - window.innerWidth > 100 || 
-                window.outerHeight - window.innerHeight > 100) { 
-                document.body.innerHTML = '<div style="display:none"></div>'; 
-            } 
-        };
-        
-        // Override eval to prevent code injection
-        window.eval = function() { throw new Error('Code execution disabled'); };
-    </script>
+    <script></script>
 </head>
 <body>
     <!-- Header -->
@@ -370,7 +340,6 @@
     </footer>
 
     <!-- JavaScript -->
-    <script src="security.js"></script>
     <script src="shared.js"></script>
     <script>
         // Immediate setup
@@ -463,45 +432,26 @@
             msg.style.display = 'none';
             
             try {
-                // Direct Supabase call
-                const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
-                const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
-                
-                console.log('Subscribing:', email);
-                
-                const response = await fetch(`${SB_URL}/rest/v1/newsletter_subscribers`, {
+                const response = await fetch('/api/subscribe', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SB_SVC,
-                        'Authorization': 'Bearer ' + SB_SVC,
-                        'Prefer': 'return=representation'
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        is_active: true
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
                 });
                 
-                console.log('Response status:', response.status);
-                const responseText = await response.text();
-                console.log('Response:', responseText);
+                const data = await response.json();
                 
                 msg.style.display = 'block';
                 
-                if (response.status === 201) {
+                if (response.ok) {
                     msg.style.color = '#10b981';
-                    msg.textContent = 'Successfully subscribed! Thank you.';
+                    msg.textContent = data.message || 'Successfully subscribed! Thank you.';
                     document.getElementById('newsletterEmail').value = '';
-                } else if (response.status === 409 || responseText.includes('duplicate')) {
+                } else if (response.status === 409 || data.message?.includes('Already')) {
                     msg.style.color = '#f59e0b';
                     msg.textContent = 'You are already subscribed!';
-                } else if (responseText.includes('relation') && responseText.includes('does not exist')) {
-                    msg.style.color = '#ef4444';
-                    msg.textContent = 'Newsletter not configured yet. Please try later.';
                 } else {
                     msg.style.color = '#ef4444';
-                    msg.textContent = 'Something went wrong. Please try again.';
+                    msg.textContent = data.error || 'Something went wrong. Please try again.';
                 }
             } catch (err) {
                 console.error('Newsletter error:', err);

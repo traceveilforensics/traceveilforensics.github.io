@@ -1,23 +1,46 @@
-// Supabase configuration
-const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
-const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxOTg3NDgsImV4cCI6MjA4NTc3NDc0OH0.5sYSUDqWAp2iId_LMGAZp0Pap-ZChispV8KedbVSBEY';
-const SB_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVhcGtwcHBmdHJ4cnd0d2piY2VuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDE5ODc0OCwiZXhwIjoyMDg1Nzc0NzQ4fQ.fVgPaQWfFbKu7ZacfLjK8mtKNlaLmSchS-XoY75Ejew';
+const SB_URL = 'https://ehseucihglidozvlgdpt.supabase.co';
+const SB_ANON = 'sb_publishable_H0wD1bZnkb4Of9L3DB400w_cOFd-gPb';
 
-// All valid production URLs for redirects
+const API_BASE = '/api';
+
 const VALID_REDIRECT_URLS = [
     'https://traceveilforensics.netlify.app',
     'https://traceveilforensics.pages.dev'
 ];
 
-// Make.com webhook URLs - REPLACE with your Make.com webhook URLs
 const MAKE_WEBHOOKS = {
-    new_customer: '',      // Add your Make.com webhook for new customer
-    new_request: '',       // Add your Make.com webhook for new service request
-    new_review: ''         // Add your Make.com webhook for new review
+    new_customer: '',
+    new_request: '',
+    new_review: ''
 };
 
-// Send webhook to Make.com
-async function sendWebhook(eventType, data) {
+async function apiRequest(endpoint, options = {}) {
+    const response = await fetch(`${API_BASE}/${endpoint}`, {
+        ...options,
+        headers: {
+            'Content-Type': 'application/json',
+            ...(getStoredToken() ? { 'Authorization': `Bearer ${getStoredToken()}` } : {}),
+            ...options.headers
+        }
+    });
+    
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: 'Request failed' }));
+        throw new Error(error.error || 'Request failed');
+    }
+    
+    if (response.status === 204) return null;
+    return response.json();
+}
+
+async function fetchSecure(table, action, data = null, id = null) {
+    return apiRequest('secure-api', {
+        method: 'POST',
+        body: JSON.stringify({ table, action, id, data })
+    });
+}
+
+async function sendWebhook(eventType, webhookData) {
     const webhookUrl = MAKE_WEBHOOKS[eventType];
     if (!webhookUrl) return;
     
@@ -28,7 +51,7 @@ async function sendWebhook(eventType, data) {
             body: JSON.stringify({
                 event: eventType,
                 timestamp: new Date().toISOString(),
-                data: data
+                data: webhookData
             })
         });
     } catch (e) {
@@ -36,10 +59,8 @@ async function sendWebhook(eventType, data) {
     }
 }
 
-// Get current valid redirect URL based on current hostname
 function getRedirectUrl(path = '/reset-password.html') {
     const currentOrigin = window.location.origin;
-    // Use current origin if it's in our valid URLs, otherwise default to Netlify
     if (VALID_REDIRECT_URLS.includes(currentOrigin)) {
         return currentOrigin + path;
     }
@@ -54,93 +75,45 @@ let _loadingPromise = null;
 function init() {
     if (_sb) return;
     
-    console.log('Initializing Supabase client...');
-    console.log('SB_URL:', SB_URL);
-    console.log('Supabase SDK available:', typeof window.supabase !== 'undefined');
-    
     if (typeof window.supabase !== 'undefined') {
         try {
             _sb = window.supabase.createClient(SB_URL, SB_ANON);
-            console.log('Supabase client initialized successfully');
             _loadingPromise = loadAllData();
         } catch (e) {
             console.error('Failed to initialize Supabase client:', e);
         }
-    } else {
-        console.error('Supabase SDK not loaded');
-    }
-}
-
-// Direct fetch API to bypass RLS
-async function fetchTable(tableName) {
-    try {
-        console.log('Fetching:', tableName);
-        const response = await fetch(`${SB_URL}/rest/v1/${tableName}?select=*`, {
-            method: 'GET',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) {
-            console.error('Fetch error for', tableName, ':', response.status, await response.text());
-            return [];
-        }
-        
-        const data = await response.json();
-        console.log(tableName + ' fetched:', data.length || 0, 'records');
-        return data;
-    } catch (e) {
-        console.error('Error fetching', tableName, ':', e);
-        return [];
     }
 }
 
 async function loadAllData() {
     try {
-        console.log('Loading data from Supabase...');
-        
         const [s, p, c, i, r, rv, ii] = await Promise.all([
-            fetchTable('services'),
-            fetchTable('pricing_plans'),
-            fetchTable('customers'),
-            fetchTable('invoices'),
-            fetchTable('service_requests'),
-            fetchTable('reviews'),
-            fetchTable('invoice_items')
+            fetchSecure('services', 'list'),
+            fetchSecure('pricing_plans', 'list'),
+            fetchSecure('customers', 'list'),
+            fetchSecure('invoices', 'list'),
+            fetchSecure('service_requests', 'list'),
+            fetchSecure('reviews', 'list'),
+            fetchSecure('invoice_items', 'list').catch(() => [])
         ]);
         
-        console.log('Query results:', { 
-            s: Array.isArray(s) ? s.length : 0, 
-            p: Array.isArray(p) ? p.length : 0, 
-            c: Array.isArray(c) ? c.length : 0, 
-            i: Array.isArray(i) ? i.length : 0, 
-            r: Array.isArray(r) ? r.length : 0, 
-            rv: Array.isArray(rv) ? rv.length : 0,
-            ii: Array.isArray(ii) ? ii.length : 0
-        });
-        
-        // Join invoice items to invoices
-        const invoiceItems = Array.isArray(ii) ? ii : [];
-        const invoices = (Array.isArray(i) ? i : []).map(inv => ({
+        const invoiceItems = ii || [];
+        const invoices = (i || []).map(inv => ({
             ...inv,
             items: invoiceItems.filter(item => item.invoice_id === inv.id)
         }));
         
         _cache = {
-            services: Array.isArray(s) ? s : [],
-            pricing: (Array.isArray(p) ? p : []).filter(x => x.is_active),
-            customers: Array.isArray(c) ? c : [],
+            services: s || [],
+            pricing: (p || []).filter(x => x.is_active),
+            customers: c || [],
             invoices: invoices,
             invoice_items: invoiceItems,
-            requests: Array.isArray(r) ? r : [],
-            reviews: Array.isArray(rv) ? rv : []
+            requests: r || [],
+            reviews: rv || []
         };
         
         _ready = true;
-        console.log('Data loaded from Supabase');
-        
         window.dispatchEvent(new CustomEvent('authSystemReady'));
     } catch (e) { 
         console.error('Load error:', e); 
@@ -162,13 +135,9 @@ function getInvoiceItems() { return _cache.invoice_items; }
 function getServiceRequests() { return _cache.requests; }
 function getReviews() { return _cache.reviews; }
 
-function getRegisteredUsers() {
-    // Return customers from Supabase as "registered users"
-    return _cache.customers;
-}
+function getRegisteredUsers() { return _cache.customers; }
 
 function getCustomerById(id) {
-    // Handle both string UUIDs and numeric IDs
     return _cache.customers.find(c => c.id === id || c.id == id);
 }
 
@@ -177,76 +146,41 @@ function getCustomerByEmail(email) {
 }
 
 async function getCustomerIdForUser(email, authUserId) {
-    // First try to find by email
     let customer = getCustomerByEmail(email);
     if (customer) return customer.id;
     
-    // Try to find by user_id
     customer = _cache.customers.find(c => c.user_id === authUserId);
     if (customer) return customer.id;
     
-    // Not found, try to create one
     try {
-        console.log('Creating customer record for:', email);
-        const response = await fetch(`${SB_URL}/rest/v1/customers`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC,
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({
-                email: email,
-                user_id: authUserId
-            })
+        const data = await fetchSecure('customers', 'create', {
+            email: email,
+            user_id: authUserId
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            await loadAllData();  // Refresh cache
-            return data[0]?.id;
-        }
+        await loadAllData();
+        return data?.id;
     } catch (e) {
         console.error('Error creating customer:', e);
+        return null;
     }
-    
-    return null;
 }
 
-function saveReviews(reviews) {
-    _cache.reviews = reviews;
-    console.log('Reviews saved to cache (not persisted to DB)');
-}
+function saveReviews(reviews) { _cache.reviews = reviews; }
 
-// CRUD operations for customers
 async function addCustomer(data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/customers`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                company_name: data.company_name || data.first_name + ' ' + data.last_name,
-                email: data.email,
-                first_name: data.first_name || '',
-                last_name: data.last_name || '',
-                phone: data.phone || '',
-                billing_address: data.address || '',
-                billing_city: data.city || '',
-                billing_country: data.country || 'Kenya'
-            })
+        await fetchSecure('customers', 'create', {
+            company_name: data.company_name || data.first_name + ' ' + data.last_name,
+            email: data.email,
+            first_name: data.first_name || '',
+            last_name: data.last_name || '',
+            phone: data.phone || '',
+            billing_address: data.address || '',
+            billing_city: data.city || '',
+            billing_country: data.country || 'Kenya'
         });
-        
-        if (!response.ok) throw new Error('Failed to add customer');
         await loadAllData();
-        
-        // Trigger Make.com webhook for new customer
         sendWebhook('new_customer', { email: data.email, name: data.first_name + ' ' + data.last_name });
-        
         return { success: true };
     } catch (e) {
         console.error('Error adding customer:', e);
@@ -256,23 +190,7 @@ async function addCustomer(data) {
 
 async function updateCustomer(id, data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/customers?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                email: data.email,
-                first_name: data.first_name || '',
-                last_name: data.last_name || '',
-                phone: data.phone || '',
-                company_name: data.company_name || data.first_name + ' ' + data.last_name
-            })
-        });
-        
-        if (!response.ok) throw new Error('Failed to update customer');
+        await fetchSecure('customers', 'update', data, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -283,15 +201,7 @@ async function updateCustomer(id, data) {
 
 async function deleteCustomer(id) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/customers?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete customer');
+        await fetchSecure('customers', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -300,30 +210,15 @@ async function deleteCustomer(id) {
     }
 }
 
-// ============ SERVICES CRUD ============
 async function addService(data) {
     try {
-        const slug = data.slug || data.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now();
-        const response = await fetch(`${SB_URL}/rest/v1/services`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                name: data.name,
-                slug: slug,
-                icon: data.icon || 'fa-shield-alt',
-                description: data.description || '',
-                is_active: data.active !== false
-            })
+        await fetchSecure('services', 'create', {
+            name: data.name,
+            slug: data.slug || data.name.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
+            icon: data.icon || 'fa-shield-alt',
+            description: data.description || '',
+            is_active: data.active !== false
         });
-        
-        if (!response.ok) {
-            const err = await response.text();
-            throw new Error(err);
-        }
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -334,23 +229,7 @@ async function addService(data) {
 
 async function updateService(id, data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/services?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                name: data.name,
-                slug: data.slug,
-                icon: data.icon,
-                description: data.description,
-                is_active: data.is_active
-            })
-        });
-        
-        if (!response.ok) throw new Error('Failed to update service');
+        await fetchSecure('services', 'update', data, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -361,15 +240,7 @@ async function updateService(id, data) {
 
 async function deleteService(id) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/services?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete service');
+        await fetchSecure('services', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -378,28 +249,17 @@ async function deleteService(id) {
     }
 }
 
-// ============ PRICING CRUD ============
 async function addPricingPlan(data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/pricing_plans`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                service_id: data.service_id,
-                name: data.name,
-                price: data.price,
-                billing_cycle: data.billing_cycle || 'one_time',
-                description: data.description || '',
-                features: data.features || [],
-                is_active: data.active !== false
-            })
+        await fetchSecure('pricing_plans', 'create', {
+            service_id: data.service_id,
+            name: data.name,
+            price: data.price,
+            billing_cycle: data.billing_cycle || 'one_time',
+            description: data.description || '',
+            features: data.features || [],
+            is_active: data.active !== false
         });
-        
-        if (!response.ok) throw new Error('Failed to add pricing plan');
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -410,25 +270,7 @@ async function addPricingPlan(data) {
 
 async function updatePricingPlan(id, data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/pricing_plans?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                service_id: data.service_id,
-                name: data.name,
-                price: data.price,
-                billing_cycle: data.billing_cycle,
-                description: data.description,
-                features: data.features,
-                is_active: data.is_active
-            })
-        });
-        
-        if (!response.ok) throw new Error('Failed to update pricing plan');
+        await fetchSecure('pricing_plans', 'update', data, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -439,15 +281,7 @@ async function updatePricingPlan(id, data) {
 
 async function deletePricingPlan(id) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/pricing_plans?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete pricing plan');
+        await fetchSecure('pricing_plans', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -456,76 +290,42 @@ async function deletePricingPlan(id) {
     }
 }
 
-// ============ INVOICES CRUD ============
 async function addInvoice(data) {
     try {
         const invoiceNumber = generateInvoiceNumber();
         const today = new Date().toISOString().split('T')[0];
         
-        console.log('Creating invoice:', data);
-        
-        const response = await fetch(`${SB_URL}/rest/v1/invoices`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC,
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({
-                invoice_number: invoiceNumber,
-                customer_id: data.customer_id || null,
-                customer_email: data.customer_email || '',
-                customer_name: data.customer_name || '',
-                status: 'sent',
-                issue_date: today,
-                due_date: data.due_date || today,
-                subtotal: data.subtotal || 0,
-                tax_amount: data.tax_amount || 0,
-                tax_rate: data.tax_rate || 0,
-                discount_amount: data.discount_amount || 0,
-                total: data.total || 0,
-                currency: 'KES',
-                notes: data.notes || ''
-            })
+        const invoice = await fetchSecure('invoices', 'create', {
+            invoice_number: invoiceNumber,
+            customer_id: data.customer_id || null,
+            customer_email: data.customer_email || '',
+            customer_name: data.customer_name || '',
+            status: 'sent',
+            issue_date: today,
+            due_date: data.due_date || today,
+            subtotal: data.subtotal || 0,
+            tax_amount: data.tax_amount || 0,
+            tax_rate: data.tax_rate || 0,
+            discount_amount: data.discount_amount || 0,
+            total: data.total || 0,
+            currency: 'KES',
+            notes: data.notes || ''
         });
         
-        if (!response.ok) {
-            const err = await response.text();
-            console.error('Invoice create error:', err);
-            throw new Error(err);
-        }
-        
-        const invoice = await response.json();
-        console.log('Invoice created:', invoice);
-        
-        // Save invoice items if provided
-        if (data.items && data.items.length > 0 && invoice[0]?.id) {
-            const itemsResponse = await fetch(`${SB_URL}/rest/v1/invoice_items`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': SB_SVC,
-                    'Authorization': 'Bearer ' + SB_SVC
-                },
-                body: JSON.stringify(data.items.map(item => ({
-                    invoice_id: invoice[0].id,
+        if (data.items && data.items.length > 0 && invoice?.id) {
+            await fetchSecure('invoice_items', 'create', 
+                data.items.map(item => ({
+                    invoice_id: invoice.id,
                     description: item.description,
                     quantity: item.quantity,
                     unit_price: item.unit_price,
                     total: item.total
-                })))
-            });
-            
-            if (!itemsResponse.ok) {
-                console.error('Items save error:', await itemsResponse.text());
-            } else {
-                console.log('Invoice items saved');
-            }
+                }))
+            );
         }
         
         await loadAllData();
-        return { success: true, invoice_number: invoiceNumber, invoice: invoice[0] };
+        return { success: true, invoice_number: invoiceNumber, invoice };
     } catch (e) {
         console.error('Error adding invoice:', e);
         return { success: false, error: e.message };
@@ -534,17 +334,7 @@ async function addInvoice(data) {
 
 async function updateInvoice(id, data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/invoices?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) throw new Error('Failed to update invoice');
+        await fetchSecure('invoices', 'update', data, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -555,15 +345,7 @@ async function updateInvoice(id, data) {
 
 async function deleteInvoice(id) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/invoices?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete invoice');
+        await fetchSecure('invoices', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -572,25 +354,13 @@ async function deleteInvoice(id) {
     }
 }
 
-// ============ SERVICE REQUESTS CRUD ============
 async function updateServiceRequest(id, data) {
     try {
         const updateData = { ...data };
         if (data.status === 'completed' && !data.completed_date) {
             updateData.completed_date = new Date().toISOString().split('T')[0];
         }
-        
-        const response = await fetch(`${SB_URL}/rest/v1/service_requests?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        if (!response.ok) throw new Error('Failed to update service request');
+        await fetchSecure('service_requests', 'update', updateData, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -601,23 +371,7 @@ async function updateServiceRequest(id, data) {
 
 async function deleteServiceRequest(id) {
     try {
-        console.log('Deleting service request:', id);
-        
-        const response = await fetch(`${SB_URL}/rest/v1/service_requests?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Delete failed:', errorText);
-            throw new Error('Failed to delete service request');
-        }
-        
-        console.log('Service request deleted successfully');
+        await fetchSecure('service_requests', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -626,27 +380,14 @@ async function deleteServiceRequest(id) {
     }
 }
 
-// ============ REVIEWS CRUD ============
 async function updateReview(id, data) {
     try {
-        // Convert flagged to is_approved (inverted logic)
         const updateData = { ...data };
         if ('flagged' in updateData) {
             updateData.is_approved = !updateData.flagged;
             delete updateData.flagged;
         }
-        
-        const response = await fetch(`${SB_URL}/rest/v1/reviews?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        if (!response.ok) throw new Error('Failed to update review');
+        await fetchSecure('reviews', 'update', updateData, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -657,28 +398,15 @@ async function updateReview(id, data) {
 
 async function addReview(data) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/reviews`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                customer_name: data.customer_name || 'Anonymous',
-                customer_email: data.customer_email || '',
-                rating: data.rating || 5,
-                comment: data.comment || '',
-                is_approved: data.is_approved !== undefined ? data.is_approved : false
-            })
+        await fetchSecure('reviews', 'create', {
+            customer_name: data.customer_name || 'Anonymous',
+            customer_email: data.customer_email || '',
+            rating: data.rating || 5,
+            comment: data.comment || '',
+            is_approved: data.is_approved !== undefined ? data.is_approved : false
         });
-        
-        if (!response.ok) throw new Error('Failed to add review');
         await loadAllData();
-        
-        // Trigger Make.com webhook for new review
         sendWebhook('new_review', { rating: data.rating, comment: data.comment });
-        
         return { success: true };
     } catch (e) {
         console.error('Error adding review:', e);
@@ -688,15 +416,7 @@ async function addReview(data) {
 
 async function deleteReview(id) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/reviews?id=eq.${id}`, {
-            method: 'DELETE',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to delete review');
+        await fetchSecure('reviews', 'delete', null, id);
         await loadAllData();
         return { success: true };
     } catch (e) {
@@ -705,62 +425,21 @@ async function deleteReview(id) {
     }
 }
 
-// Services CRUD
-function saveServices(services) {
-    _cache.services = services;
-}
+function saveServices(services) { _cache.services = services; }
+function savePricing(pricing) { _cache.pricing = pricing; }
+function saveInvoices(invoices) { _cache.invoices = invoices; }
+function saveServiceRequests(requests) { _cache.requests = requests; }
+function saveCustomers(customers) { _cache.customers = customers; }
 
-
-
-// Pricing CRUD
-function savePricing(pricing) {
-    _cache.pricing = pricing;
-}
-
-// Invoices
 function generateInvoiceNumber() {
     const year = new Date().getFullYear();
     const count = _cache.invoices.length + 1;
     return `INV-${year}-${String(count).padStart(4, '0')}`;
 }
 
-
-
-function saveInvoices(invoices) {
-    _cache.invoices = invoices;
-}
-
-async function updateInvoice(id, data) {
-    try {
-        const response = await fetch(`${SB_URL}/rest/v1/invoices?id=eq.${id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) throw new Error('Failed to update invoice');
-        await loadAllData();
-        return { success: true };
-    } catch (e) {
-        console.error('Error updating invoice:', e);
-        return { success: false, error: e.message };
-    }
-}
-
-// Service Requests
-function saveServiceRequests(requests) {
-    _cache.requests = requests;
-}
-
 async function addServiceRequest(data) {
     try {
-        console.log('Adding service request:', data);
-        
-        const requestBody = {
+        await fetchSecure('service_requests', 'create', {
             customer_id: data.customer_id || null,
             customer_email: data.customer_email || '',
             customer_name: data.customer_name || '',
@@ -772,66 +451,20 @@ async function addServiceRequest(data) {
             status: 'pending',
             priority: data.priority || 'medium',
             requested_date: new Date().toISOString()
-        };
-        
-        console.log('Request body:', requestBody);
-        
-        const response = await fetch(`${SB_URL}/rest/v1/service_requests`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC,
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify(requestBody)
         });
-        
-        console.log('Response status:', response.status);
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Add service request failed:', response.status, errorText);
-            throw new Error(`Failed to add service request: ${response.status} ${errorText}`);
-        }
-        
-        const result = await response.json();
-        console.log('Service request added successfully:', result);
-        
         await loadAllData();
-        
-        // Trigger Make.com webhook for new request
         sendWebhook('new_request', { service: data.service_name, customer: data.customer_email });
-        
-        return { success: true, data: result };
+        return { success: true };
     } catch (e) {
         console.error('Error adding service request:', e);
         return { success: false, error: e.message };
     }
 }
 
-// Notifications
-let _notifications = [];
+function getNotifications() { return []; }
+function markNotificationRead() {}
+function clearNotifications() {}
 
-function markNotificationRead(id) {
-    const notification = _notifications.find(n => n.id === id);
-    if (notification) notification.read = true;
-}
-
-function clearNotifications() {
-    _notifications = [];
-}
-
-function getNotifications() {
-    return _notifications;
-}
-
-// Save customers (for import/export)
-function saveCustomers(customers) {
-    _cache.customers = customers;
-}
-
-// Export all data
 function exportAllData() {
     return {
         services: _cache.services,
@@ -851,11 +484,8 @@ async function getServiceRequestsAsync() { await waitForReady(); return _cache.r
 async function getReviewsAsync() { await waitForReady(); return _cache.reviews; }
 
 function onReady(callback) {
-    if (_ready) {
-        callback();
-    } else {
-        window.addEventListener('authSystemReady', callback, { once: true });
-    }
+    if (_ready) callback();
+    else window.addEventListener('authSystemReady', callback, { once: true });
 }
 
 function getDashboardStats() {
@@ -879,100 +509,36 @@ function getAdminNotifications() {
     const requests = _cache.requests.filter(x => x.status === 'pending');
     const overdueInvoices = _cache.invoices.filter(x => x.status === 'overdue');
     
-    if (requests.length > 0) {
-        notifications.push({
-            type: 'warning',
-            message: requests.length + ' pending service request(s)'
-        });
-    }
-    if (overdueInvoices.length > 0) {
-        notifications.push({
-            type: 'danger',
-            message: overdueInvoices.length + ' overdue invoice(s)'
-        });
-    }
+    if (requests.length > 0) notifications.push({ type: 'warning', message: requests.length + ' pending service request(s)' });
+    if (overdueInvoices.length > 0) notifications.push({ type: 'danger', message: overdueInvoices.length + ' overdue invoice(s)' });
     return notifications;
 }
 
-// Auth using Supabase SDK
 async function login(email, password) {
     init();
     
-    if (!_sb) {
-        console.error('Supabase client not initialized');
-        return { success: false, error: 'Authentication system not ready. Please refresh the page.' };
-    }
+    if (!_sb) return { success: false, error: 'Authentication system not ready' };
     
     try {
-        console.log('Attempting login for:', email);
         const { data, error } = await _sb.auth.signInWithPassword({ email, password });
         
-        if (error) {
-            console.error('Login error:', error);
-            return { success: false, error: error.message };
-        }
-        
-        console.log('Login successful, user:', data.user.id);
+        if (error) return { success: false, error: error.message };
         
         const role = data.user.user_metadata?.role || 'customer';
-        const firstName = data.user.user_metadata?.first_name || '';
-        const lastName = data.user.user_metadata?.last_name || '';
+        const customerId = await getCustomerIdForUser(email, data.user.id);
         
-        // Get customer ID from customers table
-        let customerId = null;
-        try {
-            const findResponse = await fetch(`${SB_URL}/rest/v1/customers?email=eq.${encodeURIComponent(email)}&select=id`, {
-                method: 'GET',
-                headers: {
-                    'apikey': SB_SVC,
-                    'Authorization': 'Bearer ' + SB_SVC
-                }
-            });
-            if (findResponse.ok) {
-                const customers = await findResponse.json();
-                if (customers.length > 0) {
-                    customerId = customers[0].id;
-                    console.log('Found customer ID:', customerId);
-                } else {
-                    console.log('No customer record found, creating one...');
-                    // Create customer record if not exists
-                    const createResponse = await fetch(`${SB_URL}/rest/v1/customers`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': SB_SVC,
-                            'Authorization': 'Bearer ' + SB_SVC,
-                            'Prefer': 'return=representation'
-                        },
-                        body: JSON.stringify({
-                            email: email,
-                            first_name: firstName,
-                            last_name: lastName,
-                            user_id: data.user.id
-                        })
-                    });
-                    if (createResponse.ok) {
-                        const newCustomer = await createResponse.json();
-                        customerId = newCustomer[0]?.id;
-                        console.log('Created customer with ID:', customerId);
-                    }
-                }
-            }
-        } catch (e) {
-            console.error('Error getting customer ID:', e);
-        }
-        
-        const finalUser = {
+        const user = {
             id: data.user.id,
             customer_id: customerId,
             email: data.user.email,
             role: role,
-            first_name: firstName,
-            last_name: lastName
+            first_name: data.user.user_metadata?.first_name || '',
+            last_name: data.user.user_metadata?.last_name || ''
         };
         
-        localStorage.setItem('user', JSON.stringify(finalUser));
-        return { success: true, user: finalUser, session: data.session };
+        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', data.session.access_token);
+        return { success: true, user, session: data.session };
     } catch (err) {
         console.error('Login exception:', err);
         return { success: false, error: err.message };
@@ -992,20 +558,17 @@ function clearAuth() {
 }
 
 function getStoredUser() { const u = localStorage.getItem('user'); return u ? JSON.parse(u) : null; }
+function getStoredToken() { return localStorage.getItem('token'); }
 function isAuthenticated() { return !!localStorage.getItem('user'); }
+
 async function getCurrentUser() { return getStoredUser(); }
 
 async function register(email, password, metadata = {}) {
     init();
     
-    if (!_sb) {
-        console.error('Supabase client not initialized');
-        return { success: false, error: 'Authentication system not ready. Please refresh the page.' };
-    }
+    if (!_sb) return { success: false, error: 'Authentication system not ready' };
     
     try {
-        console.log('Registering user:', email, 'with metadata:', metadata);
-        
         const { data, error } = await _sb.auth.signUp({ 
             email, 
             password,
@@ -1019,75 +582,13 @@ async function register(email, password, metadata = {}) {
             }
         });
         
-        if (error) {
-            console.error('Auth signup error:', error);
-            return { success: false, error: error.message };
-        }
+        if (error) return { success: false, error: error.message };
         
-        console.log('Auth signup successful, user ID:', data.user?.id);
-        
-        // Add to customers table and get the customer ID
-        let customerId = null;
-        try {
-            console.log('Adding customer to customers table...');
-            const customerResponse = await fetch(`${SB_URL}/rest/v1/customers`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'apikey': SB_SVC,
-                    'Authorization': 'Bearer ' + SB_SVC,
-                    'Prefer': 'return=representation'
-                },
-                body: JSON.stringify({
-                    email: email,
-                    first_name: metadata.first_name || '',
-                    last_name: metadata.last_name || '',
-                    phone: metadata.phone || '',
-                    company_name: metadata.company || '',
-                    user_id: data.user.id  // Link to auth user
-                })
-            });
-            
-            console.log('Customer insert status:', customerResponse.status);
-            
-            if (!customerResponse.ok) {
-                const errorText = await customerResponse.text();
-                console.error('Customer insert failed:', errorText);
-            } else {
-                const customerData = await customerResponse.json();
-                console.log('Customer added to table successfully:', customerData);
-                customerId = customerData[0]?.id;  // Get the customer ID from response
-            }
-        } catch (e) {
-            console.error('Customer table insert error:', e);
-        }
-        
-        // If customer table insert failed, try to find the customer by email
-        if (!customerId) {
-            try {
-                console.log('Trying to find customer by email...');
-                const findResponse = await fetch(`${SB_URL}/rest/v1/customers?email=eq.${encodeURIComponent(email)}&select=id`, {
-                    method: 'GET',
-                    headers: {
-                        'apikey': SB_SVC,
-                        'Authorization': 'Bearer ' + SB_SVC
-                    }
-                });
-                if (findResponse.ok) {
-                    const customers = await findResponse.json();
-                    if (customers.length > 0) {
-                        customerId = customers[0].id;
-                        console.log('Found customer by email:', customerId);
-                    }
-                }
-            } catch (e) {
-                console.error('Error finding customer:', e);
-            }
-        }
+        const customerId = await getCustomerIdForUser(email, data.user?.id);
         
         const user = {
             id: data.user.id,
-            customer_id: customerId,  // Store the customer table ID
+            customer_id: customerId,
             email: data.user.email,
             role: 'customer',
             first_name: metadata.first_name || '',
@@ -1104,138 +605,47 @@ async function register(email, password, metadata = {}) {
 async function requestPasswordReset(email) {
     init();
     
-    if (!_sb) {
-        console.error('Supabase client not initialized');
-        return { success: false, error: 'Authentication system not ready. Please refresh the page.' };
-    }
+    if (!_sb) return { success: false, error: 'Authentication system not ready' };
     
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
         return { success: false, error: 'Please enter a valid email address' };
     }
     
     try {
-        console.log('Requesting password reset for:', email);
-        
-        const { error } = await _sb.auth.resetPasswordForEmail(email, {
+        await _sb.auth.resetPasswordForEmail(email, {
             redirectTo: getRedirectUrl('/reset-password.html')
         });
-        
-        if (error) {
-            console.error('Password reset error:', error);
-            // Don't reveal if email exists for security
-            return { success: true, message: 'If an account exists with this email, you will receive a password reset link.' };
-        }
-        
-        console.log('Password reset email sent successfully');
-        return { success: true, message: 'If an account exists with this email, you will receive a password reset link.' };
+        return { success: true, message: 'If an account exists, you will receive a reset link.' };
     } catch (err) {
-        console.error('Password reset exception:', err);
-        return { success: true, message: 'If an account exists with this email, you will receive a password reset link.' };
+        return { success: true, message: 'If an account exists, you will receive a reset link.' };
     }
 }
 
 async function updatePassword(newPassword) {
     init();
     
-    if (!_sb) {
-        console.error('Supabase client not initialized');
-        return { success: false, error: 'Authentication system not ready. Please refresh the page.' };
-    }
+    if (!_sb) return { success: false, error: 'Authentication system not ready' };
     
     try {
-        console.log('Updating password...');
         const { data, error } = await _sb.auth.updateUser({ password: newPassword });
-        
-        if (error) {
-            console.error('Update password error:', error);
-            return { success: false, error: error.message };
-        }
-        
-        console.log('Password updated successfully');
+        if (error) return { success: false, error: error.message };
         return { success: true, data };
     } catch (err) {
-        console.error('Update password exception:', err);
         return { success: false, error: err.message };
     }
 }
 
-async function updateCustomerPassword(customerId, newPassword) {
-    try {
-        // Update password in users table (if using custom auth)
-        const response = await fetch(`${SB_URL}/rest/v1/users?id=eq.${customerId}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({ password_hash: newPassword })
-        });
-        
-        if (!response.ok) throw new Error('Failed to update password');
-        return { success: true };
-    } catch (e) {
-        console.error('Error updating customer password:', e);
-        return { success: false, error: e.message };
-    }
-}
-
 async function resetCustomerPassword(email) {
+    init();
+    if (!_sb) return { success: false, error: 'System not ready' };
+    
     try {
-        const { error } = await _sb.auth.resetPasswordForEmail(email, {
+        await _sb.auth.resetPasswordForEmail(email, {
             redirectTo: getRedirectUrl('/reset-password.html')
         });
-        if (error) return { success: false, error: error.message };
-        return { success: true, message: 'Password reset email sent to ' + email };
+        return { success: true, message: 'Password reset email sent' };
     } catch (e) {
-        console.error('Error sending password reset:', e);
-        return { success: false, error: e.message };
-    }
-}
-
-// Admin set customer password directly (using service role)
-async function adminSetPassword(email, newPassword) {
-    try {
-        // First, get user by email using admin API
-        const response = await fetch(`${SB_URL}/auth/v1/admin/users`, {
-            method: 'GET',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        if (!response.ok) throw new Error('Failed to get users');
-        
-        const users = await response.json();
-        const user = users.find(u => u.email === email);
-        
-        if (!user) return { success: false, error: 'User not found' };
-        
-        // Update password using admin API
-        const updateResponse = await fetch(`${SB_URL}/auth/v1/admin/users/${user.id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                password: newPassword
-            })
-        });
-        
-        if (!updateResponse.ok) {
-            const err = await updateResponse.text();
-            throw new Error(err);
-        }
-        
-        console.log('Password updated for:', email);
-        return { success: true, message: 'Password updated successfully' };
-    } catch (e) {
-        console.error('Error setting password:', e);
         return { success: false, error: e.message };
     }
 }
@@ -1249,9 +659,7 @@ function generateTempPassword() {
     return password;
 }
 
-// Expose Supabase client globally for reset-password page
 window._sb = null;
-
 function getSupabaseClient() {
     if (!_sb) init();
     return _sb;
@@ -1261,10 +669,10 @@ init();
 
 window.authSystem = {
     login, register, logout, clearAuth, getCurrentUser, getStoredUser, isAuthenticated,
-    requestPasswordReset, updatePassword, resetCustomerPassword, adminSetPassword, generateTempPassword,
+    requestPasswordReset, updatePassword, resetCustomerPassword, generateTempPassword,
     getServices, getPricing, getCustomers, getInvoices, getInvoiceItems, getServiceRequests, getReviews,
     getCustomerById, getCustomerByEmail, getCustomerIdForUser, getRegisteredUsers,
-    addCustomer, updateCustomer, deleteCustomer, updateCustomerPassword,
+    addCustomer, updateCustomer, deleteCustomer,
     addService, updateService, deleteService,
     addPricingPlan, updatePricingPlan, deletePricingPlan,
     generateInvoiceNumber, addInvoice, updateInvoice, deleteInvoice,
@@ -1277,11 +685,9 @@ window.authSystem = {
     getServicesAsync, getPricingAsync, getCustomersAsync, getInvoicesAsync, getServiceRequestsAsync, getReviewsAsync,
     getDashboardStats, getAdminNotifications,
     isReady, waitForReady, onReady,
-    init,
-    getSupabaseClient
+    init, getSupabaseClient
 };
 
-// EmailJS Notification System
 const EMAILJS_CONFIG = {
     serviceId: 'service_06a051h',
     publicKey: '4iUdRTWOtX5Ix-OPK',
@@ -1295,28 +701,17 @@ const EMAILJS_CONFIG = {
 };
 
 async function sendNotification(type, data) {
-    if (typeof emailjs === 'undefined') {
-        console.warn('EmailJS not loaded');
-        return { success: false, error: 'EmailJS not loaded' };
-    }
+    if (typeof emailjs === 'undefined') return { success: false, error: 'EmailJS not loaded' };
     
     const templateId = EMAILJS_CONFIG.templates[type];
     if (!templateId || templateId.startsWith('template_')) {
-        console.warn('Template not configured for:', type);
         return { success: false, error: 'Template not configured' };
     }
     
     try {
-        const response = await emailjs.send(
-            EMAILJS_CONFIG.serviceId,
-            templateId,
-            data,
-            EMAILJS_CONFIG.publicKey
-        );
-        console.log('Email sent:', response);
+        const response = await emailjs.send(EMAILJS_CONFIG.serviceId, templateId, data, EMAILJS_CONFIG.publicKey);
         return { success: true, response };
     } catch (error) {
-        console.error('Email error:', error);
         return { success: false, error: error.text || error.message };
     }
 }
@@ -1351,70 +746,25 @@ async function sendServiceCompleteNotification(request) {
     });
 }
 
-// Newsletter subscription
 async function subscribeNewsletter(email) {
     try {
-        const response = await fetch(`${SB_URL}/rest/v1/newsletter_subscribers`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC,
-                'Prefer': 'return=representation'
-            },
-            body: JSON.stringify({
-                email: email,
-                is_active: true
-            })
-        });
-        
-        if (!response.ok) {
-            const err = await response.text();
-            if (err.includes('duplicate')) {
-                return { success: true, message: 'You are already subscribed!' };
-            }
-            throw new Error(err);
-        }
-        
+        await fetchSecure('newsletter_subscribers', 'create', { email, is_active: true });
         return { success: true, message: 'Successfully subscribed!' };
     } catch (e) {
-        console.error('Newsletter subscribe error:', e);
+        if (e.message.includes('duplicate')) return { success: true, message: 'Already subscribed!' };
         return { success: false, error: e.message };
     }
 }
 
 async function unsubscribeNewsletter(email) {
     try {
-        // First find the subscriber
-        const findResponse = await fetch(`${SB_URL}/rest/v1/newsletter_subscribers?email=eq.${encodeURIComponent(email)}&select=id`, {
-            method: 'GET',
-            headers: {
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            }
-        });
-        
-        const subscribers = await findResponse.json();
-        if (subscribers.length === 0) {
-            return { success: false, error: 'Email not found' };
+        const subscribers = _cache.customers || [];
+        const sub = subscribers.find(s => s.email === email);
+        if (sub) {
+            await fetchSecure('newsletter_subscribers', 'update', { is_active: false, unsubscribed_at: new Date().toISOString() }, sub.id);
         }
-        
-        const response = await fetch(`${SB_URL}/rest/v1/newsletter_subscribers?id=eq.${subscribers[0].id}`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'apikey': SB_SVC,
-                'Authorization': 'Bearer ' + SB_SVC
-            },
-            body: JSON.stringify({
-                is_active: false,
-                unsubscribed_at: new Date().toISOString()
-            })
-        });
-        
-        return { success: true, message: 'Unsubscribed successfully' };
+        return { success: true };
     } catch (e) {
-        console.error('Newsletter unsubscribe error:', e);
         return { success: false, error: e.message };
     }
 }
@@ -1425,10 +775,3 @@ window.authSystem.sendInvoiceNotification = sendInvoiceNotification;
 window.authSystem.sendServiceCompleteNotification = sendServiceCompleteNotification;
 window.authSystem.subscribeNewsletter = subscribeNewsletter;
 window.authSystem.unsubscribeNewsletter = unsubscribeNewsletter;
-
-// Sync window._sb with internal _sb
-setInterval(() => {
-    if (_sb && window._sb !== _sb) {
-        window._sb = _sb;
-    }
-}, 100);

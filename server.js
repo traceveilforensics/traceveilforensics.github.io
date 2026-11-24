@@ -8,8 +8,8 @@ const fs = require('fs');
 const localDB = require('./local-db');
 
 const app = express();
-const PORT = 8888;
-const JWT_SECRET = 'traceveil-local-secret-2025';
+const PORT = process.env.PORT || 8888;
+const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-secret-change-in-production';
 
 // Initialize database
 localDB.initDB();
@@ -1198,9 +1198,6 @@ app.listen(PORT, () => {
   console.log(`Trace Veil Forensics - Local Server`);
   console.log(`========================================`);
   console.log(`Server running at: http://localhost:${PORT}`);
-  console.log(`\nAdmin Login:`);
-  console.log(`  Email: admin@traceveilforensics.com`);
-  console.log(`  Password: Admin@123`);
   console.log(`\nPress Ctrl+C to stop`);
   console.log(`========================================\n`);
 });

@@ -3,7 +3,7 @@
  * Handles all Supabase API requests with the service role key (kept secret on server)
  */
 
-const SB_URL = 'https://eapkpppftrxrwtwjbcen.supabase.co';
+const SB_URL = 'https://ehseucihglidozvlgdpt.supabase.co';
 const SB_SVC = process.env.SUPABASE_SERVICE_KEY;
 
 exports.handler = async (event, context) => {

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'trace-veil-v9';
+const CACHE_NAME = 'trace-veil-v10';
 
 self.addEventListener('install', event => {
   self.skipWaiting();

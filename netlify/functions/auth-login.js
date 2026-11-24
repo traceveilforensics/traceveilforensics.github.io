@@ -1,13 +1,31 @@
 const localDB = require('./local-db');
-const { generateToken, generateRefreshToken, validateEmail } = require('./utils/auth');
+const { generateToken, generateRefreshToken, validateEmail, rateLimit } = require('./utils/auth');
 const bcrypt = require('bcryptjs');
 
 localDB.initDB();
 
+const LOGIN_RATE_LIMIT = 5;
+const LOGIN_WINDOW = 15 * 60 * 1000;
+
+const loginAttempts = new Map();
+
+const checkRateLimit = (email) => {
+  const now = Date.now();
+  const attempts = loginAttempts.get(email)?.filter(t => t > now - LOGIN_WINDOW) || [];
+  
+  if (attempts.length >= LOGIN_RATE_LIMIT) {
+    return { allowed: false, retryAfter: Math.ceil((attempts[0] + LOGIN_WINDOW - now) / 1000) };
+  }
+  
+  attempts.push(now);
+  loginAttempts.set(email, attempts);
+  return { allowed: true };
+};
+
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
-      statusCode: 200,
+      statusCode: 204,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -30,12 +48,22 @@ exports.handler = async (event) => {
 
   try {
     const { email, password } = JSON.parse(event.body);
+    
     if (!email || !password) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Email and password required' }) };
     }
 
     if (!validateEmail(email)) {
       return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid email format' }) };
+    }
+
+    const rateCheck = checkRateLimit(email);
+    if (!rateCheck.allowed) {
+      return {
+        statusCode: 429,
+        headers: { ...corsHeaders, 'Retry-After': rateCheck.retryAfter },
+        body: JSON.stringify({ error: 'Too many login attempts. Please try again later.' })
+      };
     }
 
     const users = localDB.readJSON(localDB.USERS_FILE);
@@ -59,6 +87,8 @@ exports.handler = async (event) => {
     const token = generateToken(user.id, user.role);
     const refreshToken = generateRefreshToken(user.id);
     const { password_hash, ...userWithoutPassword } = user;
+
+    loginAttempts.delete(email);
 
     return {
       statusCode: 200,

@@ -1,9 +1,10 @@
 {
   "name": "traceveil-functions",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Netlify functions for Trace Veil Forensics",
   "main": "index.js",
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2"
   }
