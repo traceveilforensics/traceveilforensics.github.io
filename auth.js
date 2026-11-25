@@ -72,13 +72,31 @@ let _cache = { services: [], pricing: [], customers: [], invoices: [], requests:
 let _ready = false;
 let _loadingPromise = null;
 
+async function ensureFreshToken() {
+    if (!_sb) return;
+    const token = localStorage.getItem('token');
+    if (token && token !== 'supabase-session') return;
+    try {
+        const { data } = await _sb.auth.getSession();
+        if (data?.session?.access_token) {
+            localStorage.setItem('token', data.session.access_token);
+            return;
+        }
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+    } catch (e) {}
+}
+
 function init() {
     if (_sb) return;
     
     if (typeof window.supabase !== 'undefined') {
         try {
-            _sb = window.supabase.createClient(SB_URL, SB_ANON);
-            _loadingPromise = loadAllData();
+        _sb = window.supabase.createClient(SB_URL, SB_ANON);
+        _loadingPromise = (async () => {
+            await ensureFreshToken();
+            await loadAllData();
+        })();
         } catch (e) {
             console.error('Failed to initialize Supabase client:', e);
         }
@@ -123,6 +141,7 @@ async function loadAllData() {
 function isReady() { return _ready; }
 
 async function waitForReady() {
+    await ensureFreshToken();
     if (_ready) return;
     if (_loadingPromise) await _loadingPromise;
 }
