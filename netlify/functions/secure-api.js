@@ -1,5 +1,5 @@
-const { supabase, adminQuery } = require('../utils/supabase-admin');
-const { verifyToken, rateLimit } = require('../utils/auth');
+const { supabase, adminQuery } = require('./utils/supabase-admin');
+const { verifyToken, rateLimit } = require('./utils/auth');
 
 const ALLOWED_TABLES = ['services', 'pricing_plans', 'customers', 'invoices', 'invoice_items', 'service_requests', 'reviews', 'newsletter_subscribers'];
 
