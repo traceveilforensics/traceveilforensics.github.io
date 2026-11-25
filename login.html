@@ -73,15 +73,15 @@
             </div>
             <div class="form-options">
                 <label class="remember-me"><input type="checkbox" id="remember"> Remember me</label>
-                <a href="forgot-password.html">Forgot password?</a>
+                <a href="/forgot-password">Forgot password?</a>
             </div>
             <button type="submit" class="login-btn" id="loginBtn">
                 <span>Sign In</span>
             </button>
         </form>
         
-        <p class="register-link">Don't have an account? <a href="register.html">Sign up</a></p>
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Website</a>
+        <p class="register-link">Don't have an account? <a href="/register">Sign up</a></p>
+        <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Back to Website</a>
     </div>
 
     <script>
@@ -106,9 +106,9 @@
                     localStorage.setItem('loginTime', Date.now());
                     
                     if (result.user.role === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
+                        window.location.href = '/admin-dashboard';
                     } else {
-                        window.location.href = 'customer-dashboard.html';
+                        window.location.href = '/customer-dashboard';
                     }
                 } else {
                     errorMsg.textContent = result.error || 'Login failed';
@@ -134,7 +134,7 @@
                     return;
                 }
                 const user = window.authSystem.getStoredUser();
-                window.location.href = user?.role === 'admin' ? 'admin-dashboard.html' : 'customer-dashboard.html';
+                window.location.href = user?.role === 'admin' ? '/admin-dashboard' : '/customer-dashboard';
             } catch (e) {
                 window.authSystem.clearAuth();
             }

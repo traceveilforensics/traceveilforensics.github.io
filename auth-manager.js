@@ -139,7 +139,7 @@ const AuthManager = {
 
     logout() {
         this.clearAuth();
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
 };
 

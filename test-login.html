@@ -100,7 +100,7 @@
                 const btn = document.createElement('button');
                 btn.textContent = 'Go to Dashboard';
                 btn.style.cssText = 'padding: 15px 30px; background: #10b981; border: none; cursor: pointer; font-size: 16px; border-radius: 4px; margin-top: 10px;';
-                btn.onclick = () => window.location.href = 'customer-dashboard.html';
+                btn.onclick = () => window.location.href = '/customer-dashboard';
                 document.getElementById('result').appendChild(btn);
             } else {
                 log('Login FAILED: ' + result.error);

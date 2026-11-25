@@ -37,17 +37,17 @@ function updateAuthUI(isLoggedIn) {
             if (userDropdown) {
                 if (currentUser.role === 'admin') {
                     userDropdown.innerHTML = `
-                        <li><a href="admin-dashboard.html"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
-                        <li><a href="index.html"><i class="fas fa-globe"></i> View Website</a></li>
+                        <li><a href="/admin-dashboard"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a></li>
+                        <li><a href="/"><i class="fas fa-globe"></i> View Website</a></li>
                         <li class="divider"></li>
                         <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                     `;
                 } else {
                     userDropdown.innerHTML = `
-                        <li><a href="customer-dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
-                        <li><a href="customer-dashboard.html?tab=invoices"><i class="fas fa-file-invoice"></i> My Invoices</a></li>
-                        <li><a href="customer-dashboard.html?tab=requests"><i class="fas fa-clipboard-list"></i> Service Requests</a></li>
-                        <li><a href="customer-dashboard.html?tab=profile"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a href="/customer-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                        <li><a href="/customer-dashboard?tab=invoices"><i class="fas fa-file-invoice"></i> My Invoices</a></li>
+                        <li><a href="/customer-dashboard?tab=requests"><i class="fas fa-clipboard-list"></i> Service Requests</a></li>
+                        <li><a href="/customer-dashboard?tab=profile"><i class="fas fa-user"></i> Profile</a></li>
                         <li class="divider"></li>
                         <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                     `;
@@ -73,7 +73,7 @@ function logout() {
     localStorage.removeItem('user');
     currentUser = null;
     userToken = null;
-    window.location.href = 'index.html';
+    window.location.href = '/';
 }
 
 function setupMobileMenu() {
@@ -218,7 +218,7 @@ async function loadPublicServices(containerId = 'servicesContainer') {
                     </div>
                     <h3>${s.name}</h3>
                     <p>${s.description || ''}</p>
-                    <a href="services.html#${s.slug}" class="btn btn-primary btn-sm">
+                    <a href="/services#${s.slug}" class="btn btn-primary btn-sm">
                         <i class="fas fa-arrow-right"></i> Learn More
                     </a>
                 </div>
@@ -262,7 +262,7 @@ async function loadPricingPlans(containerId = 'pricingPlansContainer') {
                                     <ul class="pricing-features">
                                         ${(plan.features || []).map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
                                     </ul>
-                                    <a href="contact.html" class="btn btn-primary">Get Started</a>
+                                    <a href="/contact" class="btn btn-primary">Get Started</a>
                                 </div>
                             `).join('')}
                         </div>
@@ -310,7 +310,7 @@ async function loadFullServices(containerId = 'fullServicesContainer') {
                                 <ul class="plan-features">
                                     ${(plan.features || []).map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('')}
                                 </ul>
-                                <a href="contact.html" class="btn btn-primary btn-sm">Request This Service</a>
+                                <a href="/contact" class="btn btn-primary btn-sm">Request This Service</a>
                             </div>
                         `).join('')}
                     </div>

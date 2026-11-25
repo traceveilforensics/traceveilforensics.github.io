@@ -235,17 +235,17 @@
                 
                 <p class="terms">
                     By creating an account, you agree to our 
-                    <a href="terms-of-service.html">Terms of Service</a> and 
-                    <a href="privacy-policy.html">Privacy Policy</a>
+                    <a href="/terms-of-service">Terms of Service</a> and 
+                    <a href="/privacy-policy">Privacy Policy</a>
                 </p>
             </form>
 
             <p class="login-link">
-                Already have an account? <a href="login.html">Sign in</a>
+                Already have an account? <a href="/login">Sign in</a>
             </p>
             
             <p class="login-link">
-                <a href="index.html"><i class="fas fa-arrow-left"></i> Back to Website</a>
+                <a href="/"><i class="fas fa-arrow-left"></i> Back to Website</a>
             </p>
         </div>
     </div>
@@ -330,7 +330,7 @@
                     successMessage.style.display = 'block';
 
                     setTimeout(() => {
-                        window.location.href = 'customer-dashboard.html';
+                        window.location.href = '/customer-dashboard';
                     }, 1500);
                 } else {
                     errorMessage.textContent = result.error || 'Registration failed. Please try again.';
@@ -347,7 +347,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             if (window.authSystem && window.authSystem.isAuthenticated()) {
-                window.location.href = 'customer-dashboard.html';
+                window.location.href = '/customer-dashboard';
             }
         });
     </script>

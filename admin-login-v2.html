@@ -75,7 +75,7 @@
                     last_name: data.user.user_metadata?.last_name || ''
                 }));
                 localStorage.setItem('token', data.session?.access_token || '');
-                window.location.href = 'admin-dashboard.html';
+                window.location.href = '/admin-dashboard';
             }
         }
     </script>

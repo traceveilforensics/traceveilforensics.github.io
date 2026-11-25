@@ -3,6 +3,22 @@
     {
       "source": "/api/(.*)",
       "destination": "https://traceveilforensics.pages.dev/api/$1"
-    }
+    },
+    { "source": "/about", "destination": "/about.html" },
+    { "source": "/admin-dashboard", "destination": "/admin-dashboard.html" },
+    { "source": "/admin-login", "destination": "/admin-login.html" },
+    { "source": "/admin-login-v2", "destination": "/admin-login-v2.html" },
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/contact", "destination": "/contact.html" },
+    { "source": "/customer-dashboard", "destination": "/customer-dashboard.html" },
+    { "source": "/forgot-password", "destination": "/forgot-password.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/pricing", "destination": "/pricing.html" },
+    { "source": "/privacy-policy", "destination": "/privacy-policy.html" },
+    { "source": "/register", "destination": "/register.html" },
+    { "source": "/reset-password", "destination": "/reset-password.html" },
+    { "source": "/service-agreement", "destination": "/service-agreement.html" },
+    { "source": "/services", "destination": "/services.html" },
+    { "source": "/terms-of-service", "destination": "/terms-of-service.html" }
   ]
 }

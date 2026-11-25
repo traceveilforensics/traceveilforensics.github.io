@@ -1470,7 +1470,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="index.html" class="logo">
+                <a href="/" class="logo">
                     <img src="LOGO_NAME_optimized.png" alt="Trace Veil">
                     <span>Admin</span>
                 </a>
@@ -1532,7 +1532,7 @@
                         Logout
                     </a>
                 </div>
-                <a href="index.html" target="_blank" class="nav-item" style="background: linear-gradient(135deg, #FFD700, #e6c200); color: #0a1628; margin: 20px 12px; padding: 14px; text-align: center; border-radius: 10px; font-weight: 700;">
+                <a href="/" target="_blank" class="nav-item" style="background: linear-gradient(135deg, #FFD700, #e6c200); color: #0a1628; margin: 20px 12px; padding: 14px; text-align: center; border-radius: 10px; font-weight: 700;">
                     <i class="fas fa-external-link-alt"></i>
                     View Website
                 </a>
@@ -1642,13 +1642,13 @@
             
             if (!user) {
                 console.log('No user, redirecting to login');
-                window.location.href = 'admin-login.html';
+                window.location.href = '/admin-login';
                 return;
             }
             
             // Check if admin
             if (user.role !== 'admin') {
-                document.getElementById('contentArea').innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;"><p>You are logged in as ' + user.email + ' but not as admin.</p><a href="admin-login.html">Login as admin</a></div>';
+                document.getElementById('contentArea').innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;"><p>You are logged in as ' + user.email + ' but not as admin.</p><a href="/admin-login">Login as admin</a></div>';
                 return;
             }
 
@@ -4065,7 +4065,7 @@
                 setTimeout(() => {
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
-                    window.location.href = 'login.html';
+                    window.location.href = '/login';
                 }, 2000);
 
             } catch (error) {
@@ -4094,7 +4094,7 @@
 
         function logout() {
             window.authSystem.clearAuth();
-            window.location.href = 'index.html';
+            window.location.href = '/';
         }
     </script>
 </body>
