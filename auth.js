@@ -61,7 +61,7 @@ async function sendWebhook(eventType, webhookData) {
 
 function getRedirectUrl(path = '/reset-password.html') {
     const currentOrigin = window.location.origin;
-    if (VALID_REDIRECT_URLS.includes(currentOrigin)) {
+    if (VALID_REDIRECT_URLS.includes(currentOrigin) || currentOrigin.endsWith('.vercel.app')) {
         return currentOrigin + path;
     }
     return VALID_REDIRECT_URLS[0] + path;

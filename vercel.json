@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://traceveilforensics.pages.dev/api/$1"
+    }
+  ]
+}
